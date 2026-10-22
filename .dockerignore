@@ -1,0 +1,13 @@
+.git
+.github
+.idea
+.vscode
+.claude
+**/node_modules
+**/target
+**/dist
+**/dev-dist
+**/coverage
+deploy/.env
+deploy/backups
+docs

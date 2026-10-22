@@ -7,7 +7,7 @@
 #   standpos_auth   NOLOGIN owner of the pre-tenant lookup functions (see docs/adr/0003-pre-tenant-lookups.md)
 #
 # Grants on tables are part of the Flyway migrations, not of this script.
-set -eu
+set -e
 
 : "${STANDPOS_OWNER_PASSWORD:?STANDPOS_OWNER_PASSWORD must be set}"
 : "${STANDPOS_APP_PASSWORD:?STANDPOS_APP_PASSWORD must be set}"

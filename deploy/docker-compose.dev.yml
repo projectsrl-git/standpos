@@ -1,0 +1,28 @@
+# PostgreSQL only, for running the backend and frontend from the IDE (see docs/development.md).
+# The throwaway passwords match backend/src/main/resources/application-dev.yml.
+#
+#   docker compose -f deploy/docker-compose.dev.yml up -d
+name: standpos-dev
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: standpos
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: dev-postgres-password
+      STANDPOS_OWNER_PASSWORD: dev-owner-password
+      STANDPOS_APP_PASSWORD: dev-app-password
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata-dev:/var/lib/postgresql/data
+      - ./postgres/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d standpos"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  pgdata-dev:
