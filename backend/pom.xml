@@ -13,6 +13,10 @@
   <artifactId>backend</artifactId>
   <name>StandPOS backend</name>
 
+  <properties>
+    <spring-boot.run.skip>false</spring-boot.run.skip>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>it.projectsrl.standpos</groupId>

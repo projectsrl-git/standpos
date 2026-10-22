@@ -68,4 +68,17 @@ Adding a dependency outside this list needs a one-line justification in the PR d
 
 ## Commands
 
-Filled in by Phase 0 (build, test, run locally, run with Compose, seed demo data).
+| Task | Command |
+| --- | --- |
+| Build and test all Java modules (unit + Testcontainers integration) | `./mvnw -B verify` |
+| Backend tests without Docker | `STANDPOS_TEST_JDBC_URL=jdbc:postgresql://… ./mvnw -B verify` (see `docs/development.md`) |
+| Dev database (PostgreSQL 17 on localhost:5432) | `docker compose -f deploy/docker-compose.dev.yml up -d` |
+| Run the backend in dev (migrates, bootstraps a demo tenant) | `./mvnw -pl backend -am spring-boot:run -Dspring-boot.run.profiles=dev` |
+| Run the frontend in dev (http://localhost:5173, proxies `/api`) | `cd frontend && npm ci && npm run dev` |
+| Frontend checks | `cd frontend && npm run lint && npm test && npm run build` |
+| Format the frontend | `cd frontend && npm run format` |
+| Run the full stack (https://localhost) | `cp deploy/.env.example deploy/.env` then `docker compose -f deploy/docker-compose.yml up -d --build --wait` |
+| Seed the first tenant, venue and owner | `docker compose -f deploy/docker-compose.yml run --rm backend --bootstrap` |
+| One-off database dump | `docker compose -f deploy/docker-compose.yml run --rm backup --now` |
+
+Dev owner (dev profile only): `owner@standpos.test` / `dev-owner-login`, PIN `1234`.
