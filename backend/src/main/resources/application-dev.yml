@@ -1,0 +1,33 @@
+# Local development against deploy/docker-compose.dev.yml (PostgreSQL on localhost:5432).
+# The passwords below are throwaway values for a local database only; they match deploy/.env.dev.
+spring:
+  datasource:
+    password: ${STANDPOS_DB_APP_PASSWORD:dev-app-password}
+  flyway:
+    password: ${STANDPOS_DB_OWNER_PASSWORD:dev-owner-password}
+
+# The Vite dev server proxies http://localhost:5173 to this backend over plain HTTP.
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false
+
+standpos:
+  security:
+    secure-cookies: false
+  bootstrap:
+    on-startup: true
+    tenant-name: ${STANDPOS_BOOTSTRAP_TENANT_NAME:Oratorio di prova}
+    venue-name: ${STANDPOS_BOOTSTRAP_VENUE_NAME:Bar oratorio}
+    owner-name: ${STANDPOS_BOOTSTRAP_OWNER_NAME:Titolare di prova}
+    owner-email: ${STANDPOS_BOOTSTRAP_OWNER_EMAIL:owner@standpos.test}
+    owner-password: ${STANDPOS_BOOTSTRAP_OWNER_PASSWORD:dev-owner-login}
+    owner-pin: ${STANDPOS_BOOTSTRAP_OWNER_PIN:1234}
+
+logging:
+  structured:
+    format:
+      console: ""
+  level:
+    it.projectsrl.standpos: debug

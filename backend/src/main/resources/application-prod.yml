@@ -1,0 +1,14 @@
+# Production: every value comes from the environment; secure cookies are mandatory.
+server:
+  servlet:
+    session:
+      cookie:
+        secure: true
+
+standpos:
+  security:
+    secure-cookies: true
+
+logging:
+  level:
+    it.projectsrl.standpos: info
