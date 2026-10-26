@@ -30,11 +30,12 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-# WinSW 2.x is the stable line (3.x is still alpha). Pin the SHA-256 of WinSW-x64.exe after verifying it once
-# (GitHub publishes no digest for this release): download it, compare with a second source, paste the hash here.
+# WinSW 2.x is the stable line (3.x is still alpha). GitHub publishes no digest for this release, so the SHA-256
+# was pinned on 2026-10-26 from the release asset (18,243,033 bytes, uploaded 2023-01-28, file version 2.12.0.0,
+# not Authenticode-signed), computed with sha256sum and Get-FileHash. A new WinSW version needs a new pin.
 $WinSWVersion = 'v2.12.0'
 $WinSWUrl = "https://github.com/winsw/winsw/releases/download/$WinSWVersion/WinSW-x64.exe"
-$WinSWSha256 = ''
+$WinSWSha256 = '05b82d46ad331cc16bdc00de5c6332c1ef818df8ceefcd49c726553209b3a0da'
 
 $ServiceId = 'StandPOSPrintAgent'
 $AppName = 'StandPOS Print Agent'
