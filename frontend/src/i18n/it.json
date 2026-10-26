@@ -1,0 +1,188 @@
+{
+  "app": {
+    "name": "StandPOS",
+    "loading": "Caricamento…"
+  },
+  "common": {
+    "save": "Salva",
+    "cancel": "Annulla",
+    "edit": "Modifica",
+    "delete": "Elimina",
+    "add": "Aggiungi",
+    "create": "Crea",
+    "logout": "Esci",
+    "back": "Indietro",
+    "yes": "Sì",
+    "no": "No",
+    "none": "Nessuno",
+    "actions": "Azioni",
+    "name": "Nome",
+    "sort": "Ordine",
+    "confirmDelete": "Eliminare «{{name}}»?",
+    "empty": "Nessun elemento."
+  },
+  "login": {
+    "title": "Accesso gestori",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Accedi",
+    "enrolLink": "Registra questo dispositivo come cassa",
+    "pinLink": "Accesso cassieri con PIN"
+  },
+  "enrol": {
+    "title": "Registra dispositivo",
+    "intro": "Inserisci il codice di 8 caratteri generato da un gestore. Il codice vale 10 minuti e si usa una volta sola.",
+    "code": "Codice",
+    "name": "Nome del dispositivo",
+    "defaultName": "Cassa 1",
+    "submit": "Registra",
+    "done": "Dispositivo «{{name}}» registrato.",
+    "toPin": "Vai all'accesso cassieri",
+    "alreadyEnrolled": "Questo dispositivo è già registrato come «{{name}}»."
+  },
+  "pin": {
+    "title": "Chi è in cassa?",
+    "notEnrolled": "Questo dispositivo non è registrato come cassa.",
+    "enrolLink": "Registra dispositivo",
+    "noCashiers": "Nessun cassiere con PIN per questo locale. Un gestore può impostarlo in Utenti.",
+    "enterPin": "PIN di {{name}}",
+    "delete": "Cancella",
+    "submit": "Entra",
+    "other": "Cambia persona",
+    "managerLink": "Accesso gestori"
+  },
+  "register": {
+    "title": "Cassa",
+    "cashier": "Cassiere: {{name}}",
+    "soldOut": "Esaurito",
+    "readOnly": "Anteprima del listino: la vendita arriva con la prossima versione.",
+    "emptyCatalogue": "Nessun prodotto attivo in questo locale."
+  },
+  "manager": {
+    "title": "Area gestione",
+    "venue": "Locale",
+    "noVenue": "Nessun locale disponibile.",
+    "nav": {
+      "venues": "Locali",
+      "users": "Utenti",
+      "devices": "Dispositivi",
+      "routes": "Reparti",
+      "categories": "Categorie",
+      "products": "Prodotti"
+    }
+  },
+  "venues": {
+    "title": "Locali",
+    "kind": "Tipo",
+    "kinds": { "PERMANENT": "Permanente", "EVENT": "Evento" },
+    "timeZone": "Fuso orario",
+    "dayChangeTime": "Cambio giornata",
+    "receiptHeader": "Intestazione scontrino",
+    "receiptFooter": "Piè di pagina scontrino",
+    "active": "Attivo",
+    "new": "Nuovo locale"
+  },
+  "users": {
+    "title": "Utenti",
+    "displayName": "Nome",
+    "email": "Email (solo gestori)",
+    "password": "Password (almeno 10 caratteri)",
+    "pin": "PIN (4–6 cifre)",
+    "newPin": "Nuovo PIN",
+    "setPin": "Imposta PIN",
+    "clearPin": "Rimuovi PIN",
+    "role": "Ruolo",
+    "venue": "Locale",
+    "allVenues": "Tutti i locali",
+    "roles": {
+      "PLATFORM_ADMIN": "Amministratore piattaforma",
+      "OWNER": "Titolare",
+      "MANAGER": "Gestore",
+      "STOCK_CLERK": "Magazziniere",
+      "CASHIER": "Cassiere",
+      "KITCHEN": "Cucina"
+    },
+    "memberships": "Ruoli",
+    "addRole": "Aggiungi ruolo",
+    "removeRole": "Togli",
+    "new": "Nuovo utente",
+    "hasPin": "PIN impostato",
+    "noPin": "Senza PIN"
+  },
+  "devices": {
+    "title": "Dispositivi",
+    "kind": "Tipo",
+    "kinds": { "REGISTER": "Cassa", "KITCHEN": "Schermo cucina", "PRINT_AGENT": "Agente di stampa" },
+    "generate": "Genera codice di registrazione",
+    "code": "Codice: {{code}}",
+    "expires": "Scade alle {{time}}. Inseriscilo sul dispositivo da registrare, alla pagina «Registra dispositivo».",
+    "lastSeen": "Ultimo contatto",
+    "never": "Mai",
+    "status": "Stato",
+    "active": "Attivo",
+    "revoked": "Revocato",
+    "revoke": "Revoca",
+    "confirmRevoke": "Revocare «{{name}}»? Smetterà subito di funzionare.",
+    "rename": "Rinomina"
+  },
+  "routes": {
+    "title": "Reparti",
+    "intro": "I reparti indicano dove va una riga dell'ordine (es. Bar, Cucina).",
+    "new": "Nuovo reparto"
+  },
+  "categories": {
+    "title": "Categorie",
+    "colour": "Colore",
+    "defaultRoute": "Reparto predefinito",
+    "new": "Nuova categoria"
+  },
+  "products": {
+    "title": "Prodotti",
+    "category": "Categoria",
+    "price": "Prezzo (€)",
+    "pricePlaceholder": "4,50",
+    "route": "Reparto (se diverso dalla categoria)",
+    "active": "Attivo",
+    "trackStock": "Gestisci magazzino",
+    "lowThreshold": "Soglia scorta bassa",
+    "soldOut": "Esaurito",
+    "new": "Nuovo prodotto",
+    "needCategory": "Crea prima almeno una categoria."
+  },
+  "errors": {
+    "generic": "Si è verificato un errore. Riprova.",
+    "network": "Connessione assente: controlla la rete.",
+    "unauthenticated": "Sessione scaduta: accedi di nuovo.",
+    "access_denied": "Non hai i permessi per questa operazione.",
+    "not_found": "Elemento non trovato.",
+    "conflict": "L'operazione è in conflitto con dati esistenti (nome già usato?).",
+    "validation": "Controlla i campi evidenziati.",
+    "request": { "invalid": "Richiesta non valida." },
+    "csrf": { "invalid": "Sessione non valida: ricarica la pagina." },
+    "invalidPrice": "Prezzo non valido: usa il formato 4,50.",
+    "auth": {
+      "invalid_credentials": "Email o password errate.",
+      "locked": "Troppi tentativi falliti: riprova tra qualche minuto.",
+      "rate_limited": "Troppi tentativi: attendi un minuto.",
+      "no_membership": "Questo utente non appartiene a nessuna organizzazione attiva.",
+      "invalid_pin": "PIN errato.",
+      "pin_locked": "PIN bloccato per troppi tentativi: riprova tra 15 minuti.",
+      "pin_not_allowed": "Questo utente non può usare questa cassa.",
+      "register_required": "Operazione possibile solo da una cassa registrata."
+    },
+    "device": {
+      "invalid_code": "Codice non valido, già usato o scaduto.",
+      "rate_limited": "Troppi tentativi: attendi un minuto."
+    },
+    "user": {
+      "membership_exists": "L'utente ha già questo ruolo.",
+      "last_owner": "Deve restare almeno un titolare.",
+      "invalid_role": "Ruolo non valido per il locale scelto."
+    },
+    "venue": { "invalid_time_zone": "Fuso orario sconosciuto." },
+    "catalog": {
+      "route_in_use": "Il reparto è usato da categorie o prodotti.",
+      "category_not_empty": "La categoria contiene ancora prodotti."
+    }
+  }
+}

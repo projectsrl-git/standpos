@@ -1,0 +1,4 @@
+# Oracle Always Free demo: same as prod, behind Caddy with a real domain. SumUp sandbox only (from Phase 2).
+logging:
+  level:
+    it.projectsrl.standpos: info

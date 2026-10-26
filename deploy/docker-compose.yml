@@ -1,0 +1,97 @@
+# StandPOS stack: PostgreSQL 17, backend, Caddy (TLS + PWA + reverse proxy), nightly backups.
+#
+#   cp deploy/.env.example deploy/.env      # then edit the passwords
+#   docker compose -f deploy/docker-compose.yml up -d --build
+#   docker compose -f deploy/docker-compose.yml run --rm backend --bootstrap
+#
+# Locally the site is https://localhost (Caddy internal CA); on a server set STANDPOS_DOMAIN.
+name: standpos
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: standpos
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in deploy/.env}
+      # Read by initdb/10-standpos-roles.sh on the first start of an empty volume.
+      STANDPOS_OWNER_PASSWORD: ${STANDPOS_DB_OWNER_PASSWORD:?set STANDPOS_DB_OWNER_PASSWORD in deploy/.env}
+      STANDPOS_APP_PASSWORD: ${STANDPOS_DB_APP_PASSWORD:?set STANDPOS_DB_APP_PASSWORD in deploy/.env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d standpos"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    image: standpos/backend:${STANDPOS_VERSION:-local}
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: ${STANDPOS_PROFILE:-prod}
+      STANDPOS_DB_URL: jdbc:postgresql://postgres:5432/standpos
+      STANDPOS_DB_OWNER_PASSWORD: ${STANDPOS_DB_OWNER_PASSWORD}
+      STANDPOS_DB_APP_PASSWORD: ${STANDPOS_DB_APP_PASSWORD}
+      STANDPOS_BOOTSTRAP_TENANT_NAME: ${STANDPOS_BOOTSTRAP_TENANT_NAME:-}
+      STANDPOS_BOOTSTRAP_VENUE_NAME: ${STANDPOS_BOOTSTRAP_VENUE_NAME:-}
+      STANDPOS_BOOTSTRAP_OWNER_NAME: ${STANDPOS_BOOTSTRAP_OWNER_NAME:-}
+      STANDPOS_BOOTSTRAP_OWNER_EMAIL: ${STANDPOS_BOOTSTRAP_OWNER_EMAIL:-}
+      STANDPOS_BOOTSTRAP_OWNER_PASSWORD: ${STANDPOS_BOOTSTRAP_OWNER_PASSWORD:-}
+      STANDPOS_BOOTSTRAP_OWNER_PIN: ${STANDPOS_BOOTSTRAP_OWNER_PIN:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health/readiness"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+  caddy:
+    build:
+      context: ..
+      dockerfile: frontend/Dockerfile
+    image: standpos/web:${STANDPOS_VERSION:-local}
+    restart: unless-stopped
+    environment:
+      STANDPOS_DOMAIN: ${STANDPOS_DOMAIN:-localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  backup:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/opt/standpos/backup.sh"]
+    environment:
+      PGHOST: postgres
+      PGUSER: postgres
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: standpos
+      BACKUP_AT: ${STANDPOS_BACKUP_AT:-02:30}
+      BACKUP_KEEP: ${STANDPOS_BACKUP_KEEP:-30}
+    volumes:
+      - ./backup/backup.sh:/opt/standpos/backup.sh:ro
+      - ${STANDPOS_BACKUP_DIR:-./backups}:/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,12 @@
+standpos:
+  security:
+    # Many tests log in from the same MockMvc address; the limiter itself is covered by RateLimiterTest.
+    login-attempts-per-minute: 100000
+    enrol-attempts-per-minute: 100000
+
+logging:
+  structured:
+    format:
+      console: ""
+  level:
+    org.testcontainers: info

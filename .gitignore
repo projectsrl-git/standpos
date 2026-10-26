@@ -31,3 +31,7 @@ deploy/backups/
 # Print agent local data
 print-agent/data/
 *.sqlite
+
+# Frontend tooling
+frontend/dev-dist/
+.eslintcache
