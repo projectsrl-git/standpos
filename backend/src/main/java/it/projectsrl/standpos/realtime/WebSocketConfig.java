@@ -29,7 +29,7 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
  *       device token (cookie or bearer) is required, and the WebSocket session takes that principal. Browser
  *       handshakes must come from the same origin.
  *   <li>Inbound frames are authorised by {@link StompAuthorization}; message handling runs in the caller's tenant
- *       ({@link TenantChannelInterceptor}). Frames of one session are processed in order.
+ *       ({@link TenantChannelInterceptor}).
  *   <li>Topics: {@code /topic/venues/{venueId}/stock|printers|print-jobs}; the agent's own queue
  *       {@code /user/queue/print-jobs}; agent messages to {@code /app/agent/heartbeat|ack}.
  * </ul>
@@ -71,7 +71,6 @@ class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         if (!properties.allowedOrigins().isEmpty()) {
             endpoint.setAllowedOriginPatterns(properties.allowedOrigins().toArray(String[]::new));
         }
-        registry.setPreserveReceiveOrder(true);
     }
 
     @Override

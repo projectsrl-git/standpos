@@ -62,5 +62,6 @@ class PrintDocumentTest {
     void wrapSplitsLongWords() {
         assertThat(PlainTextRenderer.wrap("abcdefghij kl", 4)).containsExactly("abcd", "efgh", "ij", "kl");
         assertThat(PlainTextRenderer.wrap("", 4)).containsExactly("");
+        assertThat(PlainTextRenderer.wrap("  > senza cipolla", 10)).containsExactly("  > senza", "  cipolla");
     }
 }

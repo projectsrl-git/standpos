@@ -23,7 +23,6 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
 /**
@@ -63,7 +62,7 @@ class StompAuthorization implements ChannelInterceptor {
             return message;
         }
         StandposPrincipal principal = StandposPrincipal.from(accessor.getUser())
-                .orElseThrow(() -> new AccessDeniedException("Not authenticated"));
+                .orElseThrow(() -> new MessageDeliveryException("Not authenticated"));
         CurrentDevice device = device(accessor).orElse(null);
         boolean allowed = switch (command) {
             case CONNECT, STOMP -> true;
@@ -73,7 +72,8 @@ class StompAuthorization implements ChannelInterceptor {
         };
         if (!allowed) {
             log.info("STOMP {} to {} refused for {}", command, accessor.getDestination(), principal.getName());
-            throw new MessageDeliveryException(message, new AccessDeniedException("Access denied"));
+            // A short message: the ERROR frame must not echo the session's headers back to the client.
+            throw new MessageDeliveryException("Access denied");
         }
         return message;
     }

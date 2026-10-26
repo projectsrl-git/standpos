@@ -35,13 +35,7 @@ public abstract class IntegrationTest {
 
     @DynamicPropertySource
     static void database(DynamicPropertyRegistry registry) {
-        TestDatabase.Coordinates db = TestDatabase.get();
-        registry.add("spring.datasource.url", db::url);
-        registry.add("spring.datasource.username", () -> "standpos_app");
-        registry.add("spring.datasource.password", db::appPassword);
-        registry.add("spring.flyway.url", db::url);
-        registry.add("spring.flyway.user", () -> "standpos_owner");
-        registry.add("spring.flyway.password", db::ownerPassword);
+        TestDatabase.register(registry);
     }
 
     @AfterEach

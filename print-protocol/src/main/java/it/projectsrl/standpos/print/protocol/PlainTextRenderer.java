@@ -64,32 +64,51 @@ public final class PlainTextRenderer {
         return lines;
     }
 
-    /** Word wrap; words longer than the width are split. Always returns at least one line. */
+    /**
+     * Word wrap; words longer than the width are split, and leading spaces indent every line of the paragraph.
+     * Always returns at least one line.
+     */
     public static List<String> wrap(String text, int width) {
         List<String> lines = new ArrayList<>();
         for (String paragraph : text.split("\n", -1)) {
-            StringBuilder line = new StringBuilder();
-            for (String word : paragraph.split(" ")) {
-                while (word.length() > width) {
-                    if (!line.isEmpty()) {
-                        lines.add(line.toString());
-                        line.setLength(0);
-                    }
-                    lines.add(word.substring(0, width));
-                    word = word.substring(width);
-                }
-                if (line.isEmpty()) {
-                    line.append(word);
-                } else if (line.length() + 1 + word.length() <= width) {
-                    line.append(' ').append(word);
-                } else {
+            int indentLength = 0;
+            while (indentLength < paragraph.length() && paragraph.charAt(indentLength) == ' ') {
+                indentLength++;
+            }
+            if (indentLength >= width) {
+                indentLength = 0;
+            }
+            String indent = paragraph.substring(0, indentLength);
+            for (String line : wrapWords(paragraph.substring(indentLength).strip(), width - indentLength)) {
+                lines.add(indent + line);
+            }
+        }
+        return lines;
+    }
+
+    private static List<String> wrapWords(String paragraph, int width) {
+        List<String> lines = new ArrayList<>();
+        StringBuilder line = new StringBuilder();
+        for (String word : paragraph.split(" +")) {
+            while (word.length() > width) {
+                if (!line.isEmpty()) {
                     lines.add(line.toString());
                     line.setLength(0);
-                    line.append(word);
                 }
+                lines.add(word.substring(0, width));
+                word = word.substring(width);
             }
-            lines.add(line.toString());
+            if (line.isEmpty()) {
+                line.append(word);
+            } else if (line.length() + 1 + word.length() <= width) {
+                line.append(' ').append(word);
+            } else {
+                lines.add(line.toString());
+                line.setLength(0);
+                line.append(word);
+            }
         }
+        lines.add(line.toString());
         return lines;
     }
 
