@@ -20,9 +20,11 @@ public class Authz {
     private static final String CACHE = Authz.class.getName() + ".memberships";
 
     private final MembershipRepository memberships;
+    private final AppUserRepository users;
 
-    public Authz(MembershipRepository memberships) {
+    public Authz(MembershipRepository memberships, AppUserRepository users) {
         this.memberships = memberships;
+        this.users = users;
     }
 
     public static Optional<StandposPrincipal> principal() {
@@ -54,6 +56,23 @@ public class Authz {
     /** Any user holding a role in the tenant. */
     public boolean hasAnyMembership() {
         return isUser() && !myMemberships().isEmpty();
+    }
+
+    /** Owner, or manager or stock clerk of this venue: goods receipts, counts, adjustments. */
+    public boolean canManageStock(UUID venueId) {
+        return isUser() && venueId != null && myMemberships().stream()
+                .anyMatch(m -> m.grants(venueId, Role.MANAGER) || m.grants(venueId, Role.STOCK_CLERK));
+    }
+
+    /** Suppliers are tenant-wide: the owner, or anyone who manages stock on some venue. */
+    public boolean canManageSuppliers() {
+        return isUser() && myMemberships().stream().anyMatch(
+                m -> m.getRole() == Role.OWNER || m.getRole() == Role.MANAGER || m.getRole() == Role.STOCK_CLERK);
+    }
+
+    /** A platform administrator; the flag is read from the database, not from the session. */
+    public boolean isPlatformAdmin() {
+        return isUser() && users.findById(requirePrincipal().userId()).map(AppUser::isPlatformAdmin).orElse(false);
     }
 
     /** The request comes from an enrolled, non-revoked register. */

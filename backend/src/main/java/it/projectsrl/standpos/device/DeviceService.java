@@ -9,11 +9,14 @@ import it.projectsrl.standpos.venue.VenueRepository;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -30,6 +33,12 @@ public class DeviceService {
 
     public record Enrolled(Device device, String token) {}
 
+    /** Kinds enrolled by {@code POST /api/v1/devices/enrol}: browsers, which receive the token as a cookie. */
+    public static final Set<DeviceKind> BROWSER_KINDS = EnumSet.of(DeviceKind.REGISTER, DeviceKind.KITCHEN);
+
+    /** Kinds enrolled by {@code POST /api/v1/agents/enrol}, which returns the token in the body. */
+    public static final Set<DeviceKind> AGENT_KINDS = EnumSet.of(DeviceKind.PRINT_AGENT);
+
     private final DeviceRepository devices;
     private final DeviceEnrolmentCodeRepository codes;
     private final VenueRepository venues;
@@ -37,10 +46,11 @@ public class DeviceService {
     private final RateLimiter enrolRateLimiter;
     private final TransactionTemplate tx;
     private final Clock clock;
+    private final ApplicationEventPublisher events;
 
     public DeviceService(DeviceRepository devices, DeviceEnrolmentCodeRepository codes, VenueRepository venues,
             AuthLookup lookup, @Qualifier("enrolRateLimiter") RateLimiter enrolRateLimiter, TransactionTemplate tx,
-            Clock clock) {
+            Clock clock, ApplicationEventPublisher events) {
         this.devices = devices;
         this.codes = codes;
         this.venues = venues;
@@ -48,6 +58,7 @@ public class DeviceService {
         this.enrolRateLimiter = enrolRateLimiter;
         this.tx = tx;
         this.clock = clock;
+        this.events = events;
     }
 
     public DeviceEnrolmentCode createEnrolmentCode(UUID venueId, DeviceKind kind, UUID createdBy) {
@@ -67,13 +78,19 @@ public class DeviceService {
     }
 
     /** Exchanges a one-time code for a device token. The code is burnt even if the device insert then fails. */
-    public Enrolled enrol(String rawCode, String name, String clientIp) {
+    public Enrolled enrol(String rawCode, String name, String clientIp, Set<DeviceKind> accepted) {
         if (!enrolRateLimiter.tryAcquire("enrol:" + clientIp)) {
             throw new ApiException(HttpStatus.TOO_MANY_REQUESTS, "device.rate_limited", "Too many enrolment attempts");
         }
         String code = DeviceTokens.normaliseCode(rawCode);
-        AuthLookup.ClaimedCode claimed = lookup.claimEnrolmentCode(code)
+        AuthLookup.ClaimedCode claimed = lookup.claimEnrolmentCode(code, accepted)
                 .orElseThrow(() -> ApiException.badRequest("device.invalid_code", "Unknown, used or expired code"));
+        if (!claimed.claimed()) {
+            // A valid code of another kind: not burnt, so it still works on the right endpoint.
+            throw claimed.kind() == DeviceKind.PRINT_AGENT
+                    ? ApiException.badRequest("device.agent_code", "This code enrols a print agent, not a browser")
+                    : ApiException.badRequest("device.not_agent_code", "This code does not enrol a print agent");
+        }
         String token = DeviceTokens.newToken();
         Device device = TenantContext.callAs(claimed.tenantId(), () -> tx.execute(status -> {
             Device created = devices.save(new Device(
@@ -101,6 +118,7 @@ public class DeviceService {
     public Device revoke(UUID venueId, UUID deviceId) {
         Device device = find(venueId, deviceId);
         device.revoke(clock.instant());
+        events.publishEvent(new DeviceEvents.Revoked(deviceId));
         log.info("Device {} revoked", deviceId);
         return device;
     }

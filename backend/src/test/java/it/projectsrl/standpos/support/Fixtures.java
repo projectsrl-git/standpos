@@ -64,6 +64,7 @@ public class Fixtures {
     public String enrol(TenantFixture tenant, UUID venueId, DeviceKind kind) {
         String code = TenantContext.callAs(tenant.tenantId(),
                 () -> devices.createEnrolmentCode(venueId, kind, tenant.ownerId()).getCode());
-        return devices.enrol(code, kind + " test", "fixtures-" + UUID.randomUUID()).token();
+        return devices.enrol(code, kind + " test", "fixtures-" + UUID.randomUUID(),
+                kind == DeviceKind.PRINT_AGENT ? DeviceService.AGENT_KINDS : DeviceService.BROWSER_KINDS).token();
     }
 }

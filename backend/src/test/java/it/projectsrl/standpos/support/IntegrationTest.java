@@ -1,5 +1,6 @@
 package it.projectsrl.standpos.support;
 
+import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -17,7 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import(Fixtures.class)
+@Import({Fixtures.class, SalesFixtures.class, TestClockConfig.class})
 public abstract class IntegrationTest {
 
     @Autowired
@@ -25,6 +26,12 @@ public abstract class IntegrationTest {
 
     @Autowired
     protected Fixtures fixtures;
+
+    @Autowired
+    protected SalesFixtures sales;
+
+    @Autowired
+    protected MutableClock clock;
 
     @DynamicPropertySource
     static void database(DynamicPropertyRegistry registry) {
@@ -35,6 +42,11 @@ public abstract class IntegrationTest {
         registry.add("spring.flyway.url", db::url);
         registry.add("spring.flyway.user", () -> "standpos_owner");
         registry.add("spring.flyway.password", db::ownerPassword);
+    }
+
+    @AfterEach
+    void resetClock() {
+        clock.reset();
     }
 
     protected Browser browser() {

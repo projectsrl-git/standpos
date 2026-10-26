@@ -3,6 +3,7 @@ package it.projectsrl.standpos.auth;
 import it.projectsrl.standpos.audit.AuditService;
 import it.projectsrl.standpos.common.ApiException;
 import it.projectsrl.standpos.venue.VenueRepository;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     public record UserView(UUID id, String displayName, String email, boolean hasPassword, boolean hasPin,
-            List<Membership> memberships) {}
+            List<Membership> memberships, Instant lockedUntil, Instant pinLockedUntil) {}
 
     public record NewUser(String displayName, String email, String password, String pin, UUID venueId, Role role) {}
 
@@ -116,6 +117,58 @@ public class UserService {
         return memberships.findAllByUserId(userId).isEmpty() ? null : get(userId);
     }
 
+    /** Owner: clears the password lockout and/or the PIN lockout before the 15 minutes expire. Audited. */
+    @Transactional
+    public UserView unlock(UUID userId, boolean account, boolean pin) {
+        AppUser user = users.findById(userId).orElseThrow(() -> ApiException.notFound("User"));
+        recordUnlock(user, account, pin);
+        return get(userId);
+    }
+
+    /** Users holding a role on the venue, with their lock state, for the venue's managers. */
+    @Transactional(readOnly = true)
+    public List<UserView> venueUsers(UUID venueId) {
+        venues.findById(venueId).orElseThrow(() -> ApiException.notFound("Venue"));
+        Map<UUID, List<Membership>> byUser = new LinkedHashMap<>();
+        memberships.findAllByVenueId(venueId)
+                .forEach(m -> byUser.computeIfAbsent(m.getUserId(), k -> new java.util.ArrayList<>()).add(m));
+        return users.findAllById(byUser.keySet()).stream()
+                .sorted((a, b) -> a.getDisplayName().compareToIgnoreCase(b.getDisplayName()))
+                .map(u -> view(u, byUser.get(u.getId())))
+                .toList();
+    }
+
+    /** Venue manager: clears the PIN lockout of a user who holds a role on that venue. Audited. */
+    @Transactional
+    public UserView unlockPin(UUID venueId, UUID userId) {
+        boolean onVenue = memberships.findAllByUserId(userId).stream().anyMatch(m -> venueId.equals(m.getVenueId()));
+        if (!onVenue) {
+            throw ApiException.notFound("User");
+        }
+        AppUser user = users.findById(userId).orElseThrow(() -> ApiException.notFound("User"));
+        recordUnlock(user, false, true);
+        return view(user, memberships.findAllByUserId(userId).stream()
+                .filter(m -> venueId.equals(m.getVenueId()))
+                .toList());
+    }
+
+    private void recordUnlock(AppUser user, boolean account, boolean pin) {
+        Map<String, Object> before = new LinkedHashMap<>();
+        before.put("lockedUntil", user.getLockedUntil());
+        before.put("pinLockedUntil", user.getPinLockedUntil());
+        if (account) {
+            user.unlockAccount();
+        }
+        if (pin) {
+            user.unlockPin();
+        }
+        users.saveAndFlush(user);
+        Map<String, Object> after = new LinkedHashMap<>();
+        after.put("account", account);
+        after.put("pin", pin);
+        audit.record("user.unlocked", "app_user", user.getId(), before, after);
+    }
+
     private UserView get(UUID userId) {
         AppUser user = users.findById(userId).orElseThrow(() -> ApiException.notFound("User"));
         return view(user, memberships.findAllByUserId(userId));
@@ -144,6 +197,6 @@ public class UserService {
 
     private static UserView view(AppUser user, List<Membership> memberships) {
         return new UserView(user.getId(), user.getDisplayName(), user.getEmail(), user.getPasswordHash() != null,
-                user.hasPin(), memberships);
+                user.hasPin(), memberships, user.getLockedUntil(), user.getPinLockedUntil());
     }
 }

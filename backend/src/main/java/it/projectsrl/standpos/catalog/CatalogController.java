@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -58,12 +59,13 @@ class CatalogController {
             boolean soldOut,
             int sort) {}
 
+    /** {@code inUse}: orders or stock reference the product, so it can be deactivated but not deleted. */
     record ProductResponse(UUID id, UUID categoryId, String name, long priceCents, UUID routeId, boolean active,
-            boolean trackStock, Integer lowThreshold, boolean soldOut, int sort) {
+            boolean trackStock, Integer lowThreshold, boolean soldOut, int sort, boolean inUse) {
 
-        static ProductResponse of(Product p) {
+        static ProductResponse of(Product p, boolean inUse) {
             return new ProductResponse(p.getId(), p.getCategoryId(), p.getName(), p.getPriceCents(), p.getRouteId(),
-                    p.isActive(), p.isTrackStock(), p.getLowThreshold(), p.isSoldOut(), p.getSort());
+                    p.isActive(), p.isTrackStock(), p.getLowThreshold(), p.isSoldOut(), p.getSort(), inUse);
         }
     }
 
@@ -131,28 +133,39 @@ class CatalogController {
     @GetMapping("/products")
     @PreAuthorize("@authz.canManageVenue(#venueId)")
     List<ProductResponse> products(@PathVariable UUID venueId) {
-        return catalog.products(venueId).stream().map(ProductResponse::of).toList();
+        List<Product> list = catalog.products(venueId);
+        Set<UUID> inUse = catalog.referencedProducts(venueId);
+        return list.stream().map(p -> ProductResponse.of(p, inUse.contains(p.getId()))).toList();
     }
 
     @PostMapping("/products")
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("@authz.canManageVenue(#venueId)")
     ProductResponse createProduct(@PathVariable UUID venueId, @Valid @RequestBody ProductRequest r) {
-        return ProductResponse.of(catalog.createProduct(venueId, product(r)));
+        return ProductResponse.of(catalog.createProduct(venueId, product(r)), false);
     }
 
     @PutMapping("/products/{productId}")
     @PreAuthorize("@authz.canManageVenue(#venueId)")
     ProductResponse updateProduct(@PathVariable UUID venueId, @PathVariable UUID productId,
             @Valid @RequestBody ProductRequest r) {
-        return ProductResponse.of(catalog.updateProduct(venueId, productId, product(r)));
+        Product product = catalog.updateProduct(venueId, productId, product(r));
+        return ProductResponse.of(product, catalog.isReferenced(productId));
     }
 
+    /** Deletes an unused product; a referenced one answers 409 {@code catalog.product_in_use}. */
     @DeleteMapping("/products/{productId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("@authz.canManageVenue(#venueId)")
     void deleteProduct(@PathVariable UUID venueId, @PathVariable UUID productId) {
         catalog.deleteProduct(venueId, productId);
+    }
+
+    @PostMapping("/products/{productId}/deactivate")
+    @PreAuthorize("@authz.canManageVenue(#venueId)")
+    ProductResponse deactivateProduct(@PathVariable UUID venueId, @PathVariable UUID productId) {
+        Product product = catalog.deactivateProduct(venueId, productId);
+        return ProductResponse.of(product, catalog.isReferenced(productId));
     }
 
     private static CatalogService.CategoryData category(CategoryRequest r) {

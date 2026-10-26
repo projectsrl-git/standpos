@@ -63,6 +63,16 @@ public class Product extends TenantOwnedEntity {
         this.sort = sort;
     }
 
+    /** The manager's manual sold-out flag; the automatic one is derived from the stock level. */
+    public void setSoldOut(boolean soldOut) {
+        this.soldOut = soldOut;
+    }
+
+    /** Hides the product from the register; used instead of deleting once orders or stock reference it. */
+    public void deactivate() {
+        this.active = false;
+    }
+
     public UUID getVenueId() {
         return venueId;
     }

@@ -54,4 +54,9 @@ public class Tenant extends BaseEntity {
     public Integer getSalesCapOverride() {
         return salesCapOverride;
     }
+
+    /** Per-tenant cap that replaces the plan's sales per month; null means the plan's. */
+    public void setSalesCapOverride(Integer salesCapOverride) {
+        this.salesCapOverride = salesCapOverride;
+    }
 }

@@ -36,17 +36,17 @@ class DeviceController {
 
     record EnrolRequest(@NotBlank @Size(max = 32) String code, @NotBlank @Size(max = 80) String name) {}
 
-    /** {@code token} is returned only to print agents; browsers receive it as an HttpOnly cookie. */
-    record EnrolResponse(DeviceResponse device, String token) {}
+    /** Browsers receive the token as an HttpOnly cookie; print agents enrol on {@code /api/v1/agents/enrol}. */
+    record EnrolResponse(DeviceResponse device) {}
 
     record RenameRequest(@NotBlank @Size(max = 80) String name) {}
 
     record DeviceResponse(UUID id, UUID venueId, DeviceKind kind, String name, Instant lastSeenAt, Instant revokedAt,
-            Instant createdAt) {
+            Instant createdAt, UUID printerId) {
 
         static DeviceResponse of(Device d) {
             return new DeviceResponse(d.getId(), d.getVenueId(), d.getKind(), d.getName(), d.getLastSeenAt(),
-                    d.getRevokedAt(), d.getCreatedAt());
+                    d.getRevokedAt(), d.getCreatedAt(), d.getPrinterId());
         }
     }
 
@@ -91,11 +91,9 @@ class DeviceController {
     @PostMapping("/devices/enrol")
     @PermitAll
     ResponseEntity<EnrolResponse> enrol(@Valid @RequestBody EnrolRequest request, HttpServletRequest http) {
-        DeviceService.Enrolled enrolled = devices.enrol(request.code(), request.name().trim(), http.getRemoteAddr());
+        DeviceService.Enrolled enrolled = devices.enrol(request.code(), request.name().trim(), http.getRemoteAddr(),
+                DeviceService.BROWSER_KINDS);
         DeviceResponse device = DeviceResponse.of(enrolled.device());
-        if (enrolled.device().getKind() == DeviceKind.PRINT_AGENT) {
-            return ResponseEntity.status(HttpStatus.CREATED).body(new EnrolResponse(device, enrolled.token()));
-        }
         ResponseCookie cookie = ResponseCookie.from(DeviceTokens.COOKIE, enrolled.token())
                 .httpOnly(true)
                 .secure(properties.secureCookies())
@@ -105,7 +103,7 @@ class DeviceController {
                 .build();
         return ResponseEntity.status(HttpStatus.CREATED)
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(new EnrolResponse(device, null));
+                .body(new EnrolResponse(device));
     }
 
     @GetMapping("/devices/current")

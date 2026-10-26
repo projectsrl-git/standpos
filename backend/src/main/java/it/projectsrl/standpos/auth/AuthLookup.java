@@ -1,11 +1,13 @@
 package it.projectsrl.standpos.auth;
 
 import it.projectsrl.standpos.device.DeviceKind;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -23,7 +25,7 @@ public class AuthLookup {
 
     public record MembershipRow(UUID tenantId, UUID venueId, Role role) {}
 
-    public record ClaimedCode(UUID codeId, UUID tenantId, UUID venueId, DeviceKind kind) {}
+    public record ClaimedCode(UUID codeId, UUID tenantId, UUID venueId, DeviceKind kind, boolean claimed) {}
 
     private final JdbcTemplate jdbc;
 
@@ -71,13 +73,23 @@ public class AuthLookup {
                 (Object) tokenHash).stream().findFirst();
     }
 
-    public Optional<ClaimedCode> claimEnrolmentCode(String code) {
-        return jdbc.query("select * from auth.claim_enrolment_code(?)", (rs, i) -> new ClaimedCode(
-                        rs.getObject("code_id", UUID.class),
-                        rs.getObject("tenant_id", UUID.class),
-                        rs.getObject("venue_id", UUID.class),
-                        DeviceKind.valueOf(rs.getString("kind"))),
-                code.trim()).stream().findFirst();
+    /**
+     * Claims a valid code if its kind is one of {@code kinds}. A valid code of another kind comes back with
+     * {@code claimed = false} and stays usable; an unknown, used or expired code comes back empty.
+     */
+    public Optional<ClaimedCode> claimEnrolmentCode(String code, Collection<DeviceKind> kinds) {
+        String[] kindNames = kinds.stream().map(DeviceKind::name).toArray(String[]::new);
+        return jdbc.query(con -> {
+            PreparedStatement statement = con.prepareStatement("select * from auth.claim_enrolment_code(?, ?)");
+            statement.setString(1, code.trim());
+            statement.setArray(2, con.createArrayOf("text", kindNames));
+            return statement;
+        }, (rs, i) -> new ClaimedCode(
+                rs.getObject("code_id", UUID.class),
+                rs.getObject("tenant_id", UUID.class),
+                rs.getObject("venue_id", UUID.class),
+                DeviceKind.valueOf(rs.getString("kind")),
+                rs.getBoolean("claimed"))).stream().findFirst();
     }
 
     private static Instant instant(ResultSet rs, String column) throws SQLException {

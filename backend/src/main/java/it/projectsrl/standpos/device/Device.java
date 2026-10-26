@@ -36,6 +36,10 @@ public class Device extends TenantOwnedEntity {
     @Column(name = "created_by", updatable = false)
     private UUID createdBy;
 
+    /** For a register: the printer its receipts go to. */
+    @Column(name = "printer_id")
+    private UUID printerId;
+
     protected Device() {}
 
     public Device(UUID venueId, DeviceKind kind, String name, byte[] tokenHash, UUID createdBy) {
@@ -82,5 +86,13 @@ public class Device extends TenantOwnedEntity {
 
     public boolean isRevoked() {
         return revokedAt != null;
+    }
+
+    public UUID getPrinterId() {
+        return printerId;
+    }
+
+    public void linkPrinter(UUID printerId) {
+        this.printerId = printerId;
     }
 }

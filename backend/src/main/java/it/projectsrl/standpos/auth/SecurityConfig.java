@@ -38,9 +38,12 @@ import tools.jackson.databind.json.JsonMapper;
 @EnableMethodSecurity(jsr250Enabled = true)
 class SecurityConfig {
 
+    /** Print agent enrolment: no cookie read or set, so no CSRF (docs/adr/0010-print-agent-enrolment.md). */
+    static final String AGENT_ENROL = "/api/v1/agents/enrol";
+
     static final String[] PUBLIC_API = {
         "/api/v1/auth/csrf", "/api/v1/auth/login", "/api/v1/auth/logout", "/api/v1/devices/enrol",
-        "/api/v1/devices/current"
+        "/api/v1/devices/current", AGENT_ENROL
     };
 
     @Bean
@@ -53,7 +56,7 @@ class SecurityConfig {
         http.securityContext(c -> c.securityContextRepository(sessions.repository()))
                 .csrf(csrf -> csrf.csrfTokenRepository(csrfRepository)
                         .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
-                        .ignoringRequestMatchers(SecurityConfig::hasBearerToken))
+                        .ignoringRequestMatchers(SecurityConfig::isCookieless))
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
@@ -77,6 +80,8 @@ class SecurityConfig {
                         .requestMatchers("/actuator/**").authenticated()
                         .requestMatchers(PUBLIC_API).permitAll()
                         .requestMatchers("/api/**").authenticated()
+                        // WebSocket handshake: session (browsers) or bearer device token (agent); see ADR 0009.
+                        .requestMatchers("/ws").authenticated()
                         .requestMatchers("/error").permitAll()
                         .anyRequest().denyAll());
         return http.build();
@@ -85,6 +90,11 @@ class SecurityConfig {
     private static boolean hasBearerToken(HttpServletRequest request) {
         String header = request.getHeader("Authorization");
         return header != null && header.regionMatches(true, 0, "Bearer ", 0, 7);
+    }
+
+    /** Requests of the print agent: bearer-authenticated, or its enrolment. Exempt from CSRF, given no CSRF cookie. */
+    static boolean isCookieless(HttpServletRequest request) {
+        return hasBearerToken(request) || AGENT_ENROL.equals(request.getRequestURI());
     }
 
     static void writeProblem(JsonMapper json, HttpServletResponse response, HttpStatus status, String code,
@@ -103,7 +113,7 @@ class SecurityConfig {
     /**
      * CSRF for a single-page app: the token is read from the {@code XSRF-TOKEN} cookie and sent back in the
      * {@code X-XSRF-TOKEN} header (plain); server-rendered values keep BREACH protection (XOR). The token is loaded
-     * on every request so the cookie is always present.
+     * on every browser request so the cookie is always present; print agent requests never get the cookie.
      */
     static final class SpaCsrfTokenRequestHandler implements CsrfTokenRequestHandler {
 
@@ -113,7 +123,9 @@ class SecurityConfig {
         @Override
         public void handle(HttpServletRequest request, HttpServletResponse response, Supplier<CsrfToken> csrfToken) {
             xor.handle(request, response, csrfToken);
-            csrfToken.get();
+            if (!isCookieless(request)) {
+                csrfToken.get();
+            }
         }
 
         @Override
