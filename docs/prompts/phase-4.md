@@ -15,6 +15,7 @@ Other associations can sign up and run StandPOS without the author's help, withi
 - **Refunds through the SumUp API:** first verify in SumUp's public documentation that the refund endpoint works with a self-service API key; if it does not, keep refunds in the SumUp app.
 - **Kitchen screens** (optional): route-filtered live tickets over STOMP, ready/served states.
 - **Legal and production:** DPA template for tenants, privacy notice, terms of use; production deployment in the ISO 27001 datacenter with WAL archiving and a restore drill.
+- **Deferred from Phase 0:** tenant switcher for users who belong to several tenants (today they land in the oldest one); password change and reset for owners and managers (needs email); invitation flow instead of silently adding a user whose email already exists in another tenant (today that reveals the email is registered); shared rate-limiter store if the backend is ever scaled out.
 
 ## Acceptance criteria (draft)
 
