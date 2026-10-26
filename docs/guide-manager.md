@@ -18,6 +18,8 @@ Il locale su cui si lavora si sceglie in alto a destra.
 4. **Dispositivi**: genera un codice **Cassa** per ogni PC o tablet di cassa (sul dispositivo si apre `/enrol`) e un codice **Agente di stampa** per il PC a cui è collegata la stampante (vedi [installazione dell'agente](print-agent-setup.md)).
 5. **Stampanti**: aggiungi la stampante dell'agente (nome Windows esatto, 80 mm, code page CP858), fai una **Stampa di prova** e, in fondo alla pagina, scegli la stampante di ogni cassa.
 
+> **Demo senza stampante:** come nome Windows scrivi `text:C:\StandPOS\scontrini.txt`. L'agente scrive ogni scontrino in quel file come testo leggibile, impaginato come sulla carta (con € e accentate), invece di stamparlo. Tutto il resto funziona come con la stampante vera ("Stampato", "Ristampa"). Dettagli nella [guida dell'agente](print-agent-setup.md#demo-without-a-receipt-printer).
+
 ## Magazzino
 
 Il magazzino è un **registro di movimenti**: ogni carico, vendita, storno, scarto, rettifica e inventario aggiunge una riga che non si può più cambiare. La giacenza è sempre la somma dei movimenti.
