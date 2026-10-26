@@ -8,6 +8,18 @@ import { useList } from './useList';
 
 const ROLES: Role[] = ['OWNER', 'MANAGER', 'STOCK_CLERK', 'CASHIER', 'KITCHEN'];
 
+function isLocked(until: string | null): boolean {
+  return until !== null && new Date(until).getTime() > Date.now();
+}
+
+/** The later of the account and PIN lock times, as a local time. */
+function lockTime(user: User): string {
+  const times = [user.lockedUntil, user.pinLockedUntil]
+    .filter(isLocked)
+    .map((t) => new Date(t ?? '').getTime());
+  return new Date(Math.max(...times)).toLocaleTimeString('it-IT', { timeStyle: 'short' });
+}
+
 interface Draft {
   displayName: string;
   email: string;
@@ -137,7 +149,24 @@ export function UsersPage() {
             <tr key={user.id}>
               <td>{user.displayName}</td>
               <td>{user.email}</td>
-              <td>{user.hasPin ? t('users.hasPin') : t('users.noPin')}</td>
+              <td>
+                {user.hasPin ? t('users.hasPin') : t('users.noPin')}
+                {[user.lockedUntil, user.pinLockedUntil].some(isLocked) && (
+                  <>
+                    {' '}
+                    <span className="badge badge-danger">
+                      {t('users.locked', { time: lockTime(user) })}
+                    </span>{' '}
+                    <button
+                      className="btn btn-small"
+                      type="button"
+                      onClick={() => void run(() => api.post(`/users/${user.id}/unlock`, {}))}
+                    >
+                      {t('users.unlock')}
+                    </button>
+                  </>
+                )}
+              </td>
               <td>
                 <ul className="plain">
                   {user.memberships.map((m) => (

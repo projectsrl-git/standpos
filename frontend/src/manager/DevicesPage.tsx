@@ -77,6 +77,7 @@ export function DevicesPage() {
                 time: new Date(code.expiresAt).toLocaleTimeString('it-IT', { timeStyle: 'short' }),
               })}
             </span>
+            {code.kind === 'PRINT_AGENT' && <span>{t('devices.agentHint')}</span>}
           </div>
         )}
       </div>

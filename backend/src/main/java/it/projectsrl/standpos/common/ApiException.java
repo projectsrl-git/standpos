@@ -1,5 +1,7 @@
 package it.projectsrl.standpos.common;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 
 /**
@@ -10,6 +12,7 @@ public class ApiException extends RuntimeException {
 
     private final HttpStatus status;
     private final String code;
+    private final Map<String, Object> properties = new LinkedHashMap<>();
 
     public ApiException(HttpStatus status, String code, String detail) {
         super(detail);
@@ -23,6 +26,16 @@ public class ApiException extends RuntimeException {
 
     public String code() {
         return code;
+    }
+
+    /** Extra members of the problem detail, for example the products that ran out. */
+    public Map<String, Object> properties() {
+        return properties;
+    }
+
+    public ApiException with(String name, Object value) {
+        properties.put(name, value);
+        return this;
     }
 
     public static ApiException notFound(String entity) {

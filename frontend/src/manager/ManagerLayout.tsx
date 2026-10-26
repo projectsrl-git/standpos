@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NavLink, Outlet, useNavigate } from 'react-router';
+import { Navigate, NavLink, Outlet, useNavigate } from 'react-router';
 import { api } from '../api/client';
-import type { Venue } from '../api/types';
+import type { Usage, Venue } from '../api/types';
 import { ErrorBanner } from '../components/ErrorBanner';
 import { useSession } from '../session/SessionContext';
-import { isOwner } from '../session/roles';
-import type { ManagerContext } from './context';
+import { canManageStock, canManageVenue, isOwner } from '../session/roles';
+import { useManager, type ManagerContext } from './context';
 
 const VENUE_KEY = 'standpos.manager.venue';
 
@@ -25,6 +25,7 @@ export function ManagerLayout() {
   const [venues, setVenues] = useState<Venue[]>([]);
   const [venueId, setVenueIdState] = useState<string | null>(rememberedVenue);
   const [error, setError] = useState<unknown>(null);
+  const [usage, setUsage] = useState<Usage | null>(null);
 
   const setVenueId = useCallback((id: string) => {
     setVenueIdState(id);
@@ -65,7 +66,24 @@ export function ManagerLayout() {
     };
   }, [applyVenues]);
 
+  // Owners see the monthly usage: a banner from 80% of the cap.
+  useEffect(() => {
+    if (!isOwner(me)) return undefined;
+    let active = true;
+    api.get<Usage>('/usage').then(
+      (u) => {
+        if (active) setUsage(u);
+      },
+      () => undefined,
+    );
+    return () => {
+      active = false;
+    };
+  }, [me]);
+
   const owner = isOwner(me);
+  const manager = canManageVenue(me, venueId);
+  const stock = canManageStock(me, venueId);
   const context: ManagerContext = { venueId, venues, reloadVenues };
 
   return (
@@ -96,11 +114,27 @@ export function ManagerLayout() {
       <nav className="tabs">
         {owner && <NavLink to="/manager/venues">{t('manager.nav.venues')}</NavLink>}
         {owner && <NavLink to="/manager/users">{t('manager.nav.users')}</NavLink>}
-        <NavLink to="/manager/devices">{t('manager.nav.devices')}</NavLink>
-        <NavLink to="/manager/routes">{t('manager.nav.routes')}</NavLink>
-        <NavLink to="/manager/categories">{t('manager.nav.categories')}</NavLink>
-        <NavLink to="/manager/products">{t('manager.nav.products')}</NavLink>
+        {manager && <NavLink to="/manager/devices">{t('manager.nav.devices')}</NavLink>}
+        {manager && <NavLink to="/manager/printers">{t('manager.nav.printers')}</NavLink>}
+        {manager && <NavLink to="/manager/routes">{t('manager.nav.routes')}</NavLink>}
+        {manager && <NavLink to="/manager/categories">{t('manager.nav.categories')}</NavLink>}
+        {manager && <NavLink to="/manager/products">{t('manager.nav.products')}</NavLink>}
+        {stock && <NavLink to="/manager/stock">{t('manager.nav.stock')}</NavLink>}
+        {stock && <NavLink to="/manager/receipts">{t('manager.nav.receipts')}</NavLink>}
+        {stock && <NavLink to="/manager/counts">{t('manager.nav.counts')}</NavLink>}
+        {stock && <NavLink to="/manager/suppliers">{t('manager.nav.suppliers')}</NavLink>}
+        {manager && <NavLink to="/manager/locks">{t('manager.nav.locks')}</NavLink>}
       </nav>
+      {usage?.capReached && (
+        <p className="error banner" role="alert">
+          {usage.blocked ? t('usage.blocked', { cap: usage.cap }) : t('usage.reached', { cap: usage.cap })}
+        </p>
+      )}
+      {usage?.warning && !usage.capReached && (
+        <p className="warning banner" role="status">
+          {t('usage.warning', { sales: usage.sales, cap: usage.cap })}
+        </p>
+      )}
       <ErrorBanner error={error} />
       <main className="content">
         {venues.length === 0 && !error ? <p>{t('manager.noVenue')}</p> : null}
@@ -108,4 +142,12 @@ export function ManagerLayout() {
       </main>
     </div>
   );
+}
+
+/** The first page of the manager area: the catalogue for managers, the stock for stock clerks. */
+export function ManagerHome() {
+  const { me } = useSession();
+  const { venueId } = useManager();
+  if (!venueId) return null;
+  return <Navigate to={canManageVenue(me, venueId) ? 'products' : 'stock'} replace />;
 }

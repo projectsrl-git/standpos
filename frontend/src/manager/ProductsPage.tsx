@@ -99,6 +99,17 @@ export function ProductsPage() {
     }
   }
 
+  /** Sold or stocked products keep their history: they are hidden from the register, not deleted. */
+  async function deactivate(product: Product) {
+    if (!base || !window.confirm(t('products.confirmDeactivate', { name: product.name }))) return;
+    try {
+      await api.post(`${base}/${product.id}/deactivate`);
+      await reload();
+    } catch (e) {
+      setError(e);
+    }
+  }
+
   const categoryName = (id: string) => categories.items.find((c) => c.id === id)?.name ?? '';
 
   if (categories.items.length === 0) {
@@ -237,9 +248,17 @@ export function ProductsPage() {
                 <button className="btn" type="button" onClick={() => edit(p)}>
                   {t('common.edit')}
                 </button>
-                <button className="btn btn-danger" type="button" onClick={() => void remove(p)}>
-                  {t('common.delete')}
-                </button>
+                {p.inUse ? (
+                  p.active && (
+                    <button className="btn btn-danger" type="button" onClick={() => void deactivate(p)}>
+                      {t('products.deactivate')}
+                    </button>
+                  )
+                ) : (
+                  <button className="btn btn-danger" type="button" onClick={() => void remove(p)}>
+                    {t('common.delete')}
+                  </button>
+                )}
               </td>
             </tr>
           ))}

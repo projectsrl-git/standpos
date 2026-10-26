@@ -34,7 +34,9 @@ public class ProblemHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
     ResponseEntity<ProblemDetail> handleApi(ApiException ex) {
-        return ResponseEntity.status(ex.status()).body(problem(ex.status(), ex.code(), ex.getMessage()));
+        ProblemDetail problem = problem(ex.status(), ex.code(), ex.getMessage());
+        ex.properties().forEach(problem::setProperty);
+        return ResponseEntity.status(ex.status()).body(problem);
     }
 
     @ExceptionHandler(AccessDeniedException.class)

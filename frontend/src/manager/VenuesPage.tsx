@@ -13,6 +13,7 @@ interface Draft {
   receiptHeader: string;
   receiptFooter: string;
   active: boolean;
+  allowNegativeStock: boolean;
 }
 
 const EMPTY: Draft = {
@@ -23,6 +24,7 @@ const EMPTY: Draft = {
   receiptHeader: '',
   receiptFooter: '',
   active: true,
+  allowNegativeStock: false,
 };
 
 export function VenuesPage() {
@@ -126,6 +128,14 @@ export function VenuesPage() {
             onChange={(e) => setDraft({ ...draft, active: e.target.checked })}
           />
           <span>{t('venues.active')}</span>
+        </label>
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={draft.allowNegativeStock}
+            onChange={(e) => setDraft({ ...draft, allowNegativeStock: e.target.checked })}
+          />
+          <span>{t('venues.allowNegativeStock')}</span>
         </label>
         <button className="btn btn-primary" type="submit">
           {t('common.save')}

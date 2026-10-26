@@ -7,6 +7,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import java.time.LocalTime;
+import java.time.ZoneId;
 
 /** A place that sells: a bar open all year or a three-day festival. Unit of stock and reporting. */
 @Entity
@@ -49,6 +50,10 @@ public class Venue extends TenantOwnedEntity {
     @Column(nullable = false)
     private boolean active = true;
 
+    /** Lets sales take tracked products below zero, for events where receipts are posted after the fact. */
+    @Column(name = "allow_negative_stock", nullable = false)
+    private boolean allowNegativeStock;
+
     protected Venue() {}
 
     public Venue(String name, Kind kind) {
@@ -57,7 +62,8 @@ public class Venue extends TenantOwnedEntity {
     }
 
     public void update(String name, Kind kind, String timeZone, LocalTime dayChangeTime, String receiptHeader,
-            String receiptFooter, boolean active) {
+            String receiptFooter, boolean active, boolean allowNegativeStock) {
+        this.allowNegativeStock = allowNegativeStock;
         this.name = name;
         this.kind = kind;
         this.timeZone = timeZone;
@@ -97,5 +103,14 @@ public class Venue extends TenantOwnedEntity {
 
     public boolean isActive() {
         return active;
+    }
+
+    public boolean isAllowNegativeStock() {
+        return allowNegativeStock;
+    }
+
+    /** The venue's clock: time zone and day change, which decide the business day of a sale. */
+    public BusinessDay businessDay() {
+        return new BusinessDay(ZoneId.of(timeZone), dayChangeTime);
     }
 }

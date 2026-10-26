@@ -7,17 +7,103 @@
   <parent>
     <groupId>it.projectsrl.standpos</groupId>
     <artifactId>standpos-parent</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
   </parent>
 
   <artifactId>print-agent</artifactId>
   <name>StandPOS print agent</name>
-  <description>Windows service printing ESC/POS documents on the register's printer (Phase 1)</description>
+  <description>Windows service printing ESC/POS documents on the register's printer</description>
+
+  <properties>
+    <escpos-coffee.version>4.1.0</escpos-coffee.version>
+    <sqlite-jdbc.version>3.53.4.0</sqlite-jdbc.version>
+    <agent.main-class>it.projectsrl.standpos.printagent.Main</agent.main-class>
+  </properties>
 
   <dependencies>
     <dependency>
       <groupId>it.projectsrl.standpos</groupId>
       <artifactId>print-protocol</artifactId>
     </dependency>
+    <!-- ESC/POS commands, code page tables and raster images (SPEC: "using the escpos-coffee library") -->
+    <dependency>
+      <groupId>com.github.anastaciocintra</groupId>
+      <artifactId>escpos-coffee</artifactId>
+      <version>${escpos-coffee.version}</version>
+    </dependency>
+    <!-- Local job queue that survives a reboot (SPEC: "a local SQLite file") -->
+    <dependency>
+      <groupId>org.xerial</groupId>
+      <artifactId>sqlite-jdbc</artifactId>
+      <version>${sqlite-jdbc.version}</version>
+    </dependency>
+    <!-- JSON for jobs, acks, heartbeats and enrolment; version managed by the Spring Boot BOM -->
+    <dependency>
+      <groupId>tools.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- sqlite-jdbc loads its native library through JNI, which JDK 24+ reports unless enabled -->
+          <argLine>-XX:+EnableDynamicAgentLoading --enable-native-access=ALL-UNNAMED</argLine>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>${agent.main-class}</mainClass>
+              <addClasspath>true</addClasspath>
+              <classpathPrefix>lib/</classpathPrefix>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
+            <manifestEntries>
+              <Enable-Native-Access>ALL-UNNAMED</Enable-Native-Access>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+      <!--
+        maven-dependency-plugin rather than maven-shade-plugin: jpackage takes a plain directory of jars, the
+        sqlite-jdbc jar keeps its native libraries and signatures intact, and `java -jar target/print-agent-*.jar`
+        still works in development through the manifest Class-Path (lib/).
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-runtime-dependencies</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <includeScope>runtime</includeScope>
+              <outputDirectory>${project.build.directory}/lib</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

@@ -16,6 +16,9 @@ server:
 standpos:
   security:
     secure-cookies: false
+  websocket:
+    # The Vite dev server (http://localhost:5173) proxies /ws: its origin differs from the backend's.
+    allowed-origins: http://localhost:5173
   bootstrap:
     on-startup: true
     tenant-name: ${STANDPOS_BOOTSTRAP_TENANT_NAME:Oratorio di prova}

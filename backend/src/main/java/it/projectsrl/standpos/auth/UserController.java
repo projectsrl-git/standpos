@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -39,16 +40,19 @@ class UserController {
 
     record MembershipRequest(UUID venueId, @NotNull Role role) {}
 
+    record UnlockRequest(Boolean account, Boolean pin) {}
+
     record MembershipResponse(UUID id, UUID venueId, Role role) {}
 
     record UserResponse(UUID id, String displayName, String email, boolean hasPassword, boolean hasPin,
-            List<MembershipResponse> memberships) {
+            List<MembershipResponse> memberships, Instant lockedUntil, Instant pinLockedUntil) {
 
         static UserResponse of(UserService.UserView v) {
             return new UserResponse(v.id(), v.displayName(), v.email(), v.hasPassword(), v.hasPin(),
                     v.memberships().stream()
                             .map(m -> new MembershipResponse(m.getId(), m.getVenueId(), m.getRole()))
-                            .toList());
+                            .toList(),
+                    v.lockedUntil(), v.pinLockedUntil());
         }
     }
 
@@ -76,6 +80,15 @@ class UserController {
     @PreAuthorize("@authz.isOwner()")
     UserResponse update(@PathVariable UUID userId, @Valid @RequestBody UpdateUserRequest r) {
         return UserResponse.of(users.update(userId, r.displayName(), r.pin(), r.clearPin()));
+    }
+
+    /** Clears the account lockout and/or the PIN lockout before it expires; both when the body says nothing. */
+    @PostMapping("/{userId}/unlock")
+    @PreAuthorize("@authz.isOwner()")
+    UserResponse unlock(@PathVariable UUID userId, @RequestBody(required = false) UnlockRequest r) {
+        boolean account = r == null || r.account() == null || r.account();
+        boolean pin = r == null || r.pin() == null || r.pin();
+        return UserResponse.of(users.unlock(userId, account, pin));
     }
 
     @PostMapping("/{userId}/memberships")

@@ -2,11 +2,16 @@ package it.projectsrl.standpos.catalog;
 
 import it.projectsrl.standpos.audit.AuditService;
 import it.projectsrl.standpos.common.ApiException;
+import it.projectsrl.standpos.tenant.TenantContext;
 import it.projectsrl.standpos.venue.VenueRepository;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,14 +31,18 @@ public class CatalogService {
     private final CategoryRepository categories;
     private final ProductRepository products;
     private final AuditService audit;
+    private final ApplicationEventPublisher events;
+    private final JdbcTemplate jdbc;
 
     public CatalogService(VenueRepository venues, RouteRepository routes, CategoryRepository categories,
-            ProductRepository products, AuditService audit) {
+            ProductRepository products, AuditService audit, ApplicationEventPublisher events, JdbcTemplate jdbc) {
         this.venues = venues;
         this.routes = routes;
         this.categories = categories;
         this.products = products;
         this.audit = audit;
+        this.events = events;
+        this.jdbc = jdbc;
     }
 
     // Routes
@@ -119,6 +128,7 @@ public class CatalogService {
         apply(product, data);
         products.saveAndFlush(product);
         audit.record("product.created", "product", product.getId(), null, price(product.getPriceCents()));
+        events.publishEvent(new ProductChanged(venueId, product.getId()));
         return product;
     }
 
@@ -133,15 +143,60 @@ public class CatalogService {
         if (before != product.getPriceCents()) {
             audit.record("product.price_changed", "product", productId, price(before), price(product.getPriceCents()));
         }
+        events.publishEvent(new ProductChanged(venueId, productId));
         return product;
     }
 
-    /** Hard delete is safe while no order references products (Phase 0); later phases deactivate instead. */
+    /**
+     * Deletes a product nobody references yet. Once order lines or stock records point at it, it can only be
+     * deactivated ({@code 409 catalog.product_in_use}), so history keeps its product.
+     */
     @Transactional
     public void deleteProduct(UUID venueId, UUID productId) {
         Product product = product(venueId, productId);
+        if (isReferenced(productId)) {
+            throw ApiException.conflict("catalog.product_in_use",
+                    "The product is referenced by orders or stock records: deactivate it instead");
+        }
         products.delete(product);
         audit.record("product.deleted", "product", productId, price(product.getPriceCents()), null);
+    }
+
+    /** Hides a product from the register for good, keeping its history. */
+    @Transactional
+    public Product deactivateProduct(UUID venueId, UUID productId) {
+        Product product = product(venueId, productId);
+        product.deactivate();
+        products.saveAndFlush(product);
+        audit.record("product.deactivated", "product", productId, null, null);
+        events.publishEvent(new ProductChanged(venueId, productId));
+        return product;
+    }
+
+    /** Products of the venue that can no longer be deleted, in one query for the product list. */
+    @Transactional(readOnly = true)
+    public Set<UUID> referencedProducts(UUID venueId) {
+        UUID tenantId = TenantContext.require();
+        return new HashSet<>(jdbc.queryForList("""
+                select product_id from order_line where tenant_id = ? and venue_id = ?
+                union select product_id from stock_level where tenant_id = ? and venue_id = ?
+                union select product_id from goods_receipt_line where tenant_id = ? and venue_id = ?
+                union select product_id from stock_count_line where tenant_id = ? and venue_id = ?""",
+                UUID.class, tenantId, venueId, tenantId, venueId, tenantId, venueId, tenantId, venueId));
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isReferenced(UUID productId) {
+        UUID tenantId = TenantContext.require();
+        Boolean used = jdbc.queryForObject("""
+                select exists (select 1 from order_line where tenant_id = ? and product_id = ?)
+                    or exists (select 1 from stock_movement where tenant_id = ? and product_id = ?)
+                    or exists (select 1 from stock_level where tenant_id = ? and product_id = ?)
+                    or exists (select 1 from goods_receipt_line where tenant_id = ? and product_id = ?)
+                    or exists (select 1 from stock_count_line where tenant_id = ? and product_id = ?)""",
+                Boolean.class, tenantId, productId, tenantId, productId, tenantId, productId, tenantId, productId,
+                tenantId, productId);
+        return Boolean.TRUE.equals(used);
     }
 
     private static void apply(Product product, ProductData d) {

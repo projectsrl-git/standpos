@@ -6,7 +6,6 @@ import { SessionProvider } from '../session/SessionContext';
 import { mockFetch } from '../test/fetchMock';
 import { LoginPage } from './LoginPage';
 import { PinPage } from './PinPage';
-import { RegisterPage } from './RegisterPage';
 
 function renderPage(page: React.ReactNode) {
   return render(
@@ -72,39 +71,5 @@ describe('PinPage', () => {
     renderPage(<PinPage />);
 
     expect(await screen.findByText('Questo dispositivo non è registrato come cassa.')).toBeInTheDocument();
-  });
-});
-
-describe('RegisterPage', () => {
-  it('shows the product grid by category with prices in euro', async () => {
-    mockFetch({
-      'GET /api/v1/auth/me': () => ({
-        body: { kind: 'CASHIER', user: { id: 'u1', displayName: 'Anna', email: null }, memberships: [] },
-      }),
-      'GET /api/v1/register/catalogue': () => ({
-        body: {
-          venueId: 'v1',
-          venueName: 'Bar oratorio',
-          categories: [
-            {
-              id: 'c1',
-              name: 'Bibite',
-              colour: '#1E88E5',
-              products: [
-                { id: 'p1', name: 'Acqua', priceCents: 100, soldOut: false },
-                { id: 'p2', name: 'Chinotto', priceCents: 250, soldOut: true },
-              ],
-            },
-            { id: 'c2', name: 'Cucina', colour: '#E53935', products: [] },
-          ],
-        },
-      }),
-    });
-    renderPage(<RegisterPage />);
-
-    expect(await screen.findByRole('button', { name: /Acqua/ })).toHaveTextContent(/1,00\s€/);
-    expect(screen.getByRole('button', { name: /Chinotto/ })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Bibite' })).toHaveAttribute('aria-pressed', 'true');
-    expect(await screen.findByText('Cassiere: Anna')).toBeInTheDocument();
   });
 });

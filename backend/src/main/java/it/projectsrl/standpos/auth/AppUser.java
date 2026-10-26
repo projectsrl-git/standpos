@@ -93,6 +93,33 @@ public class AppUser extends BaseEntity {
         pinLockedUntil = null;
     }
 
+    /** Clears the password lockout before it expires (owner action). */
+    public void unlockAccount() {
+        failedLoginAttempts = 0;
+        lockedUntil = null;
+    }
+
+    /** Clears the PIN lockout before it expires (owner or venue manager action). */
+    public void unlockPin() {
+        recordPinSuccess();
+    }
+
+    public boolean isAccountLocked(Instant now) {
+        return lockedUntil != null && lockedUntil.isAfter(now);
+    }
+
+    public Instant getLockedUntil() {
+        return lockedUntil;
+    }
+
+    public int getFailedLoginAttempts() {
+        return failedLoginAttempts;
+    }
+
+    public int getPinFailedAttempts() {
+        return pinFailedAttempts;
+    }
+
     public String getEmail() {
         return email;
     }

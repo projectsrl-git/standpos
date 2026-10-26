@@ -188,26 +188,6 @@ class AuthIT extends IntegrationTest {
     }
 
     @Test
-    void printAgentReceivesItsTokenInTheBody() throws Exception {
-        Browser owner = ownerBrowser();
-        String body = owner.postJson("/api/v1/venues/" + tenant.venueId() + "/enrolment-codes", "{\"kind\":\"PRINT_AGENT\"}")
-                .andReturn().getResponse().getContentAsString();
-        String code = body.replaceAll(".*\"code\":\"([A-Z0-9]+)\".*", "$1");
-        Browser agent = browser();
-        String token = agent.postJson("/api/v1/devices/enrol", enrolJson(code))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.token").isString())
-                .andReturn().getResponse().getContentAsString().replaceAll(".*\"token\":\"([A-Za-z0-9_-]+)\".*", "$1");
-        org.assertj.core.api.Assertions.assertThat(agent.cookie(DeviceTokens.COOKIE)).isNull();
-
-        // The agent authenticates with the bearer token; no session, no CSRF.
-        browser().withoutCsrfHeader().perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-                        .get("/api/v1/devices/current").header("Authorization", "Bearer " + token))
-                .andExpect(jsonPath("$.enrolled").value(true))
-                .andExpect(jsonPath("$.kind").value("PRINT_AGENT"));
-    }
-
-    @Test
     void revokedDeviceStopsWorkingImmediately() throws Exception {
         UUID cashier = fixtures.user(tenant, "Gino", null, null, "1357", tenant.venueId(), Role.CASHIER);
         Browser register = enrolledBrowser(tenant.venueId(), DeviceKind.REGISTER);

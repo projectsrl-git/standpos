@@ -19,8 +19,23 @@ import it.projectsrl.standpos.common.TenantOwnedEntity;
 import it.projectsrl.standpos.device.DeviceEnrolmentCodeRepository;
 import it.projectsrl.standpos.device.DeviceKind;
 import it.projectsrl.standpos.device.DeviceRepository;
+import it.projectsrl.standpos.printing.PrintJobRepository;
+import it.projectsrl.standpos.printing.PrinterRepository;
+import it.projectsrl.standpos.sales.CustomerOrderRepository;
+import it.projectsrl.standpos.sales.OrderLineRepository;
+import it.projectsrl.standpos.sales.PaymentRepository;
+import it.projectsrl.standpos.sales.ShiftRepository;
+import it.projectsrl.standpos.stock.GoodsReceiptLineRepository;
+import it.projectsrl.standpos.stock.GoodsReceiptRepository;
+import it.projectsrl.standpos.stock.GoodsReceiptService;
+import it.projectsrl.standpos.stock.StockCountLineRepository;
+import it.projectsrl.standpos.stock.StockCountRepository;
+import it.projectsrl.standpos.stock.StockLevelRepository;
+import it.projectsrl.standpos.stock.StockService;
+import it.projectsrl.standpos.stock.SupplierRepository;
 import it.projectsrl.standpos.support.Fixtures.TenantFixture;
 import it.projectsrl.standpos.support.IntegrationTest;
+import it.projectsrl.standpos.support.SalesFixtures;
 import it.projectsrl.standpos.venue.Area;
 import it.projectsrl.standpos.venue.AreaRepository;
 import it.projectsrl.standpos.venue.VenueRepository;
@@ -88,6 +103,48 @@ class RlsIsolationIT extends IntegrationTest {
     @Autowired
     AuditService audit;
 
+    @Autowired
+    StockLevelRepository levels;
+
+    @Autowired
+    SupplierRepository suppliers;
+
+    @Autowired
+    GoodsReceiptRepository goodsReceipts;
+
+    @Autowired
+    GoodsReceiptLineRepository goodsReceiptLines;
+
+    @Autowired
+    StockCountRepository counts;
+
+    @Autowired
+    StockCountLineRepository countLines;
+
+    @Autowired
+    ShiftRepository shifts;
+
+    @Autowired
+    CustomerOrderRepository orders;
+
+    @Autowired
+    OrderLineRepository orderLines;
+
+    @Autowired
+    PaymentRepository payments;
+
+    @Autowired
+    PrinterRepository printers;
+
+    @Autowired
+    PrintJobRepository printJobs;
+
+    @Autowired
+    GoodsReceiptService receiptService;
+
+    @Autowired
+    StockService stockService;
+
     TenantFixture a;
     TenantFixture b;
 
@@ -96,7 +153,7 @@ class RlsIsolationIT extends IntegrationTest {
         a = fixtures.tenant("Tenant A");
         b = fixtures.tenant("Tenant B");
         for (TenantFixture t : List.of(a, b)) {
-            fixtures.user(t, "Cashier", null, null, "1357", t.venueId(), Role.CASHIER);
+            UUID cashier = fixtures.user(t, "Cashier", null, null, "1357", t.venueId(), Role.CASHIER);
             fixtures.enrol(t, t.venueId(), DeviceKind.REGISTER); // device + used enrolment code
             fixtures.inTenant(t.tenantId(), () -> {
                 usageCounters.save(new UsageCounter(LocalDate.now()));
@@ -107,6 +164,19 @@ class RlsIsolationIT extends IntegrationTest {
                 audit.record("test.seeded", "tenant", t.tenantId(), null, Map.of("ok", true));
                 return null;
             });
+            // Phase 1: stock, suppliers, counts, printers, shifts, orders, payments and print jobs.
+            UUID panini = sales.category(t, t.venueId(), "Panini");
+            UUID panino = sales.product(t, t.venueId(), panini, "Panino", 450, true, 2);
+            TenantContext.runAs(t.tenantId(), () -> {
+                receiptService.createSupplier(new GoodsReceiptService.SupplierData("Forno", null, null, null, null,
+                        true));
+                stockService.openCount(t.venueId(), "seed");
+            });
+            sales.receive(t, t.venueId(), panino, 10, 120L);
+            SalesFixtures.Register register = sales.register(t, t.venueId());
+            sales.printer(t, t.venueId(), register);
+            sales.openShift(t, register, cashier);
+            sales.sell(t, register, cashier, panino, 1, true);
         }
     }
 
@@ -126,7 +196,9 @@ class RlsIsolationIT extends IntegrationTest {
     @Test
     void repositoriesReturnOnlyTheCurrentTenantsRows() {
         List<JpaRepository<? extends TenantOwnedEntity, UUID>> tenantOwned = List.of(
-                usageCounters, venues, areas, memberships, devices, codes, routes, categories, products);
+                usageCounters, venues, areas, memberships, devices, codes, routes, categories, products, levels,
+                suppliers, goodsReceipts, goodsReceiptLines, counts, countLines, shifts, orders, orderLines, payments,
+                printers, printJobs);
         asTenant(a.tenantId(), () -> {
             for (JpaRepository<? extends TenantOwnedEntity, UUID> repository : tenantOwned) {
                 List<? extends TenantOwnedEntity> rows = repository.findAll();
@@ -147,7 +219,9 @@ class RlsIsolationIT extends IntegrationTest {
     void nativeSelectStarReturnsOnlyTheCurrentTenantsRows() {
         List<String> tables = tenantOwnedTables();
         assertThat(tables).contains("usage_counter", "venue", "area", "membership", "device", "device_enrolment_code",
-                "route", "category", "product", "audit_log");
+                "route", "category", "product", "audit_log", "stock_level", "stock_movement", "supplier",
+                "goods_receipt", "goods_receipt_line", "stock_count", "stock_count_line", "shift", "order_day_counter",
+                "customer_order", "order_line", "payment", "printer", "print_job");
         asTenant(a.tenantId(), () -> {
             for (String table : tables) {
                 List<Map<String, Object>> rows = jdbc.queryForList("select * from " + table);
@@ -194,6 +268,17 @@ class RlsIsolationIT extends IntegrationTest {
         assertThatThrownBy(() -> asTenant(a.tenantId(), () -> jdbc.update("update audit_log set action = 'x'")))
                 .rootCause().hasMessageContaining("permission denied");
         assertThatThrownBy(() -> asTenant(a.tenantId(), () -> jdbc.update("delete from audit_log")))
+                .rootCause().hasMessageContaining("permission denied");
+    }
+
+    /** Acceptance criterion 5 (Phase 1): the stock ledger cannot be rewritten by the application role. */
+    @Test
+    void stockMovementIsAppendOnly() {
+        assertThat(asTenant(a.tenantId(), () -> jdbc.queryForObject("select count(*) from stock_movement", Long.class)))
+                .isPositive();
+        assertThatThrownBy(() -> asTenant(a.tenantId(), () -> jdbc.update("update stock_movement set quantity = 1")))
+                .rootCause().hasMessageContaining("permission denied");
+        assertThatThrownBy(() -> asTenant(a.tenantId(), () -> jdbc.update("delete from stock_movement")))
                 .rootCause().hasMessageContaining("permission denied");
     }
 

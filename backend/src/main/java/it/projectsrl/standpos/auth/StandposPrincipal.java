@@ -2,9 +2,12 @@ package it.projectsrl.standpos.auth;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.security.Principal;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.security.core.AuthenticatedPrincipal;
+import org.springframework.security.core.Authentication;
 
 /**
  * Who is calling. Stored in the HTTP session for USER and CASHIER; built per request for a bare DEVICE.
@@ -55,8 +58,22 @@ public record StandposPrincipal(
                 Kind.DEVICE, device.tenantId(), null, device.name(), device.deviceId(), device.venueId(), false);
     }
 
+    /** The StandPOS principal inside a servlet or WebSocket principal (a Spring Security authentication). */
+    public static Optional<StandposPrincipal> from(Principal principal) {
+        if (principal instanceof Authentication authentication
+                && authentication.getPrincipal() instanceof StandposPrincipal standpos) {
+            return Optional.of(standpos);
+        }
+        return Optional.empty();
+    }
+
+    /** The name a WebSocket user destination resolves for a device: {@code device:<id>}. */
+    public static String deviceUserName(UUID deviceId) {
+        return "device:" + deviceId;
+    }
+
     @Override
     public String getName() {
-        return kind == Kind.DEVICE ? "device:" + deviceId : userId.toString();
+        return kind == Kind.DEVICE ? deviceUserName(deviceId) : userId.toString();
     }
 }

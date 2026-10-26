@@ -7,7 +7,7 @@
   <parent>
     <groupId>it.projectsrl.standpos</groupId>
     <artifactId>standpos-parent</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
   </parent>
 
   <artifactId>print-protocol</artifactId>
@@ -15,6 +15,17 @@
   <description>Structured print document shared by the backend and the print agent</description>
 
   <dependencies>
+    <!-- Annotations only: the backend (Spring Boot) and the agent bring Jackson's databind -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>tools.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>

@@ -10,6 +10,7 @@
     "delete": "Elimina",
     "add": "Aggiungi",
     "create": "Crea",
+    "close": "Chiudi",
     "logout": "Esci",
     "back": "Indietro",
     "yes": "Sì",
@@ -55,8 +56,88 @@
     "title": "Cassa",
     "cashier": "Cassiere: {{name}}",
     "soldOut": "Esaurito",
-    "readOnly": "Anteprima del listino: la vendita arriva con la prossima versione.",
-    "emptyCatalogue": "Nessun prodotto attivo in questo locale."
+    "left": "Ne restano {{count}}",
+    "emptyCatalogue": "Nessun prodotto attivo in questo locale.",
+    "orders": "Ordini",
+    "cart": "Ordine",
+    "emptyCart": "Tocca un prodotto per aggiungerlo.",
+    "less": "Uno in meno: {{name}}",
+    "more": "Uno in più: {{name}}",
+    "note": "Nota",
+    "notePlaceholder": "es. senza cipolla",
+    "orderDone": "Ordine N. {{number}}",
+    "offline": "Connessione al server assente: controlla la rete. Le vendite riprendono quando torna.",
+    "capBlocked": "Limite mensile di vendite raggiunto: le nuove vendite sono bloccate fino al prossimo mese.",
+    "capReached": "Limite mensile di vendite raggiunto: si può vendere fino al cambio giornata ({{time}}).",
+    "printerOffline": "Stampante offline ({{name}}): gli scontrini restano in coda e si stampano quando torna.",
+    "noPrinter": "Nessuna stampante collegata a questa cassa: le vendite non stampano lo scontrino.",
+    "printFailed": "Stampa non riuscita {{error}}. Controlla carta e stampante, poi ristampa."
+  },
+  "shift": {
+    "openTitle": "Apri il turno",
+    "openIntro": "Conta il fondo cassa nel cassetto prima di iniziare.",
+    "float": "Fondo cassa (€)",
+    "open": "Apri turno",
+    "closeTitle": "Chiudi turno",
+    "cashSales": "Incasso contanti",
+    "manualCard": "Carte (manuale)",
+    "orders": "Ordini",
+    "ordersCount": "{{paid}} pagati, {{voided}} stornati",
+    "expected": "Contanti attesi nel cassetto",
+    "counted": "Contanti contati (€)",
+    "difference": "Differenza",
+    "close": "Chiudi turno",
+    "done": "Fatto",
+    "otherCashier": "Il turno aperto su questa cassa è di un altro cassiere: deve chiuderlo lui o un gestore."
+  },
+  "payment": {
+    "cash": "Contanti",
+    "manualCard": "Carta (manuale)",
+    "cashTitle": "Pagamento in contanti",
+    "cardTitle": "Pagamento con carta (manuale)",
+    "total": "Totale",
+    "exact": "Importo esatto",
+    "tendered": "Ricevuto (€)",
+    "notEnough": "L'importo ricevuto non copre il totale.",
+    "change": "Resto: {{amount}}",
+    "manualCardHint": "Usa il terminale della carta separato, poi conferma: il pagamento viene segnato da riconciliare.",
+    "confirm": "Conferma e stampa",
+    "noReceipt": "Senza scontrino",
+    "methods": {
+      "CASH": "Contanti",
+      "MANUAL_CARD": "Carta (manuale)",
+      "SUMUP_CARD": "Carta SumUp"
+    }
+  },
+  "orders": {
+    "title": "Ordini di oggi",
+    "empty": "Nessun ordine oggi.",
+    "number": "N. {{number}}",
+    "voided": "Stornato",
+    "printReceipt": "Stampa scontrino",
+    "reprint": "Ristampa",
+    "void": "Storna",
+    "receipt": {
+      "NOT_REQUESTED": "Senza scontrino",
+      "NO_PRINTER": "Nessuna stampante",
+      "QUEUED": "In coda di stampa",
+      "SENT": "In stampa",
+      "PRINTED": "Stampato",
+      "FAILED": "Stampa non riuscita"
+    }
+  },
+  "void": {
+    "title": "Storno dell'ordine N. {{number}}",
+    "line": "{{quantity}} × {{name}} ({{amount}})",
+    "dispositions": {
+      "RETURN_TO_STOCK": "Torna a magazzino",
+      "WASTE": "Da buttare"
+    },
+    "reason": "Motivo",
+    "manager": "Gestore che autorizza",
+    "chooseManager": "Scegli il gestore",
+    "pin": "PIN del gestore",
+    "confirm": "Storna"
   },
   "manager": {
     "title": "Area gestione",
@@ -66,10 +147,21 @@
       "venues": "Locali",
       "users": "Utenti",
       "devices": "Dispositivi",
+      "printers": "Stampanti",
       "routes": "Reparti",
       "categories": "Categorie",
-      "products": "Prodotti"
+      "products": "Prodotti",
+      "stock": "Magazzino",
+      "receipts": "Carichi",
+      "counts": "Inventari",
+      "suppliers": "Fornitori",
+      "locks": "Blocchi"
     }
+  },
+  "usage": {
+    "warning": "Questo mese avete registrato {{sales}} vendite su {{cap}} del piano gratuito.",
+    "reached": "Limite mensile di {{cap}} vendite raggiunto: le casse vendono fino al cambio giornata, poi si bloccano fino al prossimo mese.",
+    "blocked": "Limite mensile di {{cap}} vendite raggiunto: le nuove vendite sono bloccate fino al prossimo mese. Contatta l'assistenza per aumentarlo."
   },
   "venues": {
     "title": "Locali",
@@ -80,6 +172,7 @@
     "receiptHeader": "Intestazione scontrino",
     "receiptFooter": "Piè di pagina scontrino",
     "active": "Attivo",
+    "allowNegativeStock": "Consenti magazzino negativo (carichi registrati dopo)",
     "new": "Nuovo locale"
   },
   "users": {
@@ -107,7 +200,9 @@
     "removeRole": "Togli",
     "new": "Nuovo utente",
     "hasPin": "PIN impostato",
-    "noPin": "Senza PIN"
+    "noPin": "Senza PIN",
+    "locked": "Bloccato fino alle {{time}}",
+    "unlock": "Sblocca"
   },
   "devices": {
     "title": "Dispositivi",
@@ -116,6 +211,7 @@
     "generate": "Genera codice di registrazione",
     "code": "Codice: {{code}}",
     "expires": "Scade alle {{time}}. Inseriscilo sul dispositivo da registrare, alla pagina «Registra dispositivo».",
+    "agentHint": "Per un agente di stampa il codice si inserisce durante l'installazione sul PC della cassa (vedi la guida di installazione).",
     "lastSeen": "Ultimo contatto",
     "never": "Mai",
     "status": "Stato",
@@ -124,6 +220,26 @@
     "revoke": "Revoca",
     "confirmRevoke": "Revocare «{{name}}»? Smetterà subito di funzionare.",
     "rename": "Rinomina"
+  },
+  "printers": {
+    "title": "Stampanti",
+    "intro": "Ogni stampante è collegata a un agente di stampa installato sul PC della cassa. Il nome Windows deve essere identico a quello in «Stampanti e scanner».",
+    "noAgent": "Nessun agente di stampa registrato: genera un codice «Agente di stampa» in Dispositivi e installa l'agente sul PC della cassa.",
+    "new": "Nuova stampante",
+    "agent": "Agente di stampa",
+    "windowsName": "Nome della stampante in Windows",
+    "width": "Larghezza carta",
+    "codePage": "Code page (CP858 ha il simbolo €)",
+    "active": "Attiva",
+    "status": "Stato",
+    "online": "Online",
+    "offline": "Offline",
+    "test": "Stampa di prova",
+    "testQueued": "Stampa di prova inviata a «{{name}}».",
+    "registers": "Stampante di ogni cassa",
+    "register": "Cassa",
+    "printer": "Stampante",
+    "printerOf": "Stampante di {{name}}"
   },
   "routes": {
     "title": "Reparti",
@@ -147,11 +263,106 @@
     "lowThreshold": "Soglia scorta bassa",
     "soldOut": "Esaurito",
     "new": "Nuovo prodotto",
-    "needCategory": "Crea prima almeno una categoria."
+    "needCategory": "Crea prima almeno una categoria.",
+    "deactivate": "Disattiva",
+    "confirmDeactivate": "Disattivare «{{name}}»? Sparisce dalla cassa ma resta nello storico di vendite e magazzino."
+  },
+  "stock": {
+    "title": "Magazzino",
+    "adjustTitle": "Rettifica o scarto",
+    "product": "Prodotto",
+    "type": "Tipo",
+    "quantity": "Quantità",
+    "quantityWaste": "Pezzi da scartare",
+    "quantitySigned": "Pezzi (+ aggiunti, − tolti)",
+    "reason": "Motivo (obbligatorio)",
+    "lowOnly": "Mostra solo scorte basse ed esauriti",
+    "onHand": "Giacenza",
+    "lowThreshold": "Soglia",
+    "value": "Valore",
+    "averageCost": "Costo medio",
+    "state": "Stato",
+    "ok": "Disponibile",
+    "low": "Scorta bassa",
+    "soldOut": "Esaurito",
+    "soldOutManual": "Esaurito (a mano)",
+    "markSoldOut": "Segna esaurito",
+    "backOnSale": "Rimetti in vendita",
+    "movements": "Movimenti",
+    "movementsOf": "Movimenti di {{name}}",
+    "noneTracked": "Nessun prodotto con gestione magazzino. Attivala nella scheda del prodotto.",
+    "noneLow": "Nessuna scorta bassa.",
+    "when": "Quando",
+    "after": "Giacenza dopo",
+    "note": "Nota",
+    "movementTypes": {
+      "RECEIPT": "Carico",
+      "SALE": "Vendita",
+      "SALE_REVERSAL": "Vendita annullata",
+      "RETURN_TO_STOCK": "Reso a magazzino",
+      "WASTE": "Scarto",
+      "ADJUSTMENT": "Rettifica",
+      "COUNT": "Inventario"
+    }
+  },
+  "suppliers": {
+    "title": "Fornitori",
+    "new": "Nuovo fornitore",
+    "contactName": "Referente",
+    "phone": "Telefono",
+    "email": "Email",
+    "notes": "Note",
+    "active": "Attivo"
+  },
+  "receipts": {
+    "title": "Carichi di merce",
+    "new": "Nuovo carico",
+    "editDraft": "Bozza di carico",
+    "needTracked": "Per registrare un carico serve almeno un prodotto con gestione magazzino.",
+    "supplier": "Fornitore",
+    "documentRef": "Documento (DDT, fattura)",
+    "receivedOn": "Data",
+    "unitCost": "Costo unitario (€, facoltativo)",
+    "addLine": "Aggiungi riga",
+    "saveDraft": "Salva bozza",
+    "post": "Registra carico",
+    "confirmPost": "Registrare il carico? Le quantità entrano in magazzino e il carico non si potrà più modificare.",
+    "confirmDelete": "Eliminare questa bozza di carico?",
+    "invalidLines": "Controlla le righe: quantità maggiori di zero e costi nel formato 4,50.",
+    "lines": "Righe",
+    "lineSummary": "{{quantity}} {{name}}",
+    "totalCost": "Costo totale",
+    "status": "Stato",
+    "statuses": { "DRAFT": "Bozza", "POSTED": "Registrato" }
+  },
+  "counts": {
+    "title": "Inventari",
+    "new": "Nuovo inventario",
+    "session": "Inventario del {{date}}",
+    "expected": "Attesi",
+    "counted": "Contati",
+    "countedOf": "Contati: {{name}}",
+    "difference": "Differenza",
+    "save": "Salva conteggi",
+    "post": "Conferma inventario",
+    "confirmPost": "Confermare l'inventario? Le differenze vengono registrate in magazzino. I prodotti lasciati vuoti non cambiano.",
+    "confirmDelete": "Eliminare questo inventario?",
+    "created": "Aperto il",
+    "continue": "Continua",
+    "view": "Vedi"
+  },
+  "locks": {
+    "title": "Blocchi",
+    "intro": "Dopo 5 tentativi sbagliati PIN o password si bloccano per 15 minuti. Qui puoi sbloccarli prima.",
+    "pin": "PIN",
+    "account": "Accesso con password",
+    "notLocked": "Non bloccato",
+    "unlockPin": "Sblocca PIN",
+    "unlockAccount": "Sblocca accesso"
   },
   "errors": {
     "generic": "Si è verificato un errore. Riprova.",
-    "network": "Connessione assente: controlla la rete.",
+    "network": "Connessione assente: controlla la rete e riprova (l'ordine non viene registrato due volte).",
     "unauthenticated": "Sessione scaduta: accedi di nuovo.",
     "access_denied": "Non hai i permessi per questa operazione.",
     "not_found": "Elemento non trovato.",
@@ -166,13 +377,16 @@
       "rate_limited": "Troppi tentativi: attendi un minuto.",
       "no_membership": "Questo utente non appartiene a nessuna organizzazione attiva.",
       "invalid_pin": "PIN errato.",
-      "pin_locked": "PIN bloccato per troppi tentativi: riprova tra 15 minuti.",
+      "pin_locked": "PIN bloccato per troppi tentativi: riprova tra 15 minuti o chiedi a un gestore di sbloccarlo.",
       "pin_not_allowed": "Questo utente non può usare questa cassa.",
-      "register_required": "Operazione possibile solo da una cassa registrata."
+      "register_required": "Operazione possibile solo da una cassa registrata.",
+      "not_approver": "Serve il PIN di un gestore di questo locale o del titolare."
     },
     "device": {
       "invalid_code": "Codice non valido, già usato o scaduto.",
-      "rate_limited": "Troppi tentativi: attendi un minuto."
+      "rate_limited": "Troppi tentativi: attendi un minuto.",
+      "agent_code": "Questo codice è per un agente di stampa: inseriscilo durante l'installazione dell'agente, non qui.",
+      "not_agent_code": "Questo codice non è per un agente di stampa."
     },
     "user": {
       "membership_exists": "L'utente ha già questo ruolo.",
@@ -182,7 +396,52 @@
     "venue": { "invalid_time_zone": "Fuso orario sconosciuto." },
     "catalog": {
       "route_in_use": "Il reparto è usato da categorie o prodotti.",
-      "category_not_empty": "La categoria contiene ancora prodotti."
+      "category_not_empty": "La categoria contiene ancora prodotti.",
+      "product_in_use": "Il prodotto è già stato venduto o movimentato: non si può eliminare, ma si può disattivare."
+    },
+    "sales": {
+      "product_unavailable": "Uno o più prodotti non sono più disponibili: toglili dall'ordine.",
+      "insufficient_stock": "Quantità non disponibile in magazzino per uno o più prodotti.",
+      "insufficient_tender": "L'importo ricevuto non copre il totale.",
+      "method_unavailable": "Metodo di pagamento non ancora disponibile.",
+      "method_required": "Scegli il metodo di pagamento.",
+      "client_id_required": "Errore della cassa: ricarica la pagina.",
+      "client_id_reused": "Errore della cassa: ricarica la pagina.",
+      "empty_order": "L'ordine è vuoto.",
+      "too_many_lines": "Troppe righe in un solo ordine.",
+      "invalid_quantity": "Quantità non valida.",
+      "not_printable": "Solo gli ordini pagati hanno uno scontrino.",
+      "not_voidable": "Questo ordine non si può stornare.",
+      "void_lines_required": "Indica per ogni riga se torna a magazzino o va buttata.",
+      "void_reason_required": "Indica il motivo dello storno."
+    },
+    "shift": {
+      "not_open": "Apri il turno prima di vendere.",
+      "other_cashier": "Il turno aperto è di un altro cassiere.",
+      "already_open": "C'è già un turno aperto su questa cassa.",
+      "invalid_float": "Fondo cassa non valido.",
+      "invalid_cash": "Importo contato non valido."
+    },
+    "usage": {
+      "cap_reached": "Limite mensile di vendite raggiunto: le nuove vendite riprendono il prossimo mese.",
+      "invalid_cap": "Limite non valido."
+    },
+    "stock": {
+      "product_not_tracked": "Il prodotto non ha la gestione magazzino attiva.",
+      "receipt_posted": "Il carico è già registrato e non si può modificare.",
+      "count_posted": "L'inventario è già confermato.",
+      "receipt_empty": "Il carico non ha righe.",
+      "invalid_type": "Tipo di movimento non valido.",
+      "invalid_quantity": "Quantità non valida.",
+      "reason_required": "Il motivo è obbligatorio.",
+      "insufficient": "Non c'è abbastanza merce in magazzino per questa operazione.",
+      "supplier_in_use": "Il fornitore compare in alcuni carichi: disattivalo invece di eliminarlo."
+    },
+    "printing": {
+      "no_printer": "Nessuna stampante collegata a questa cassa.",
+      "printer_in_use": "La stampante è collegata a una cassa o ha già stampato: disattivala invece di eliminarla.",
+      "invalid_width": "Larghezza carta non valida.",
+      "invalid_agent": "Scegli un agente di stampa registrato in questo locale."
     }
   }
 }

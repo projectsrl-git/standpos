@@ -3,10 +3,16 @@ import { useTranslation } from 'react-i18next';
 import { Navigate, Route, Routes } from 'react-router';
 import type { PrincipalKind } from './api/types';
 import { CategoriesPage } from './manager/CategoriesPage';
+import { CountsPage } from './manager/CountsPage';
 import { DevicesPage } from './manager/DevicesPage';
-import { ManagerLayout } from './manager/ManagerLayout';
+import { GoodsReceiptsPage } from './manager/GoodsReceiptsPage';
+import { LocksPage } from './manager/LocksPage';
+import { ManagerHome, ManagerLayout } from './manager/ManagerLayout';
+import { PrintersPage } from './manager/PrintersPage';
 import { ProductsPage } from './manager/ProductsPage';
 import { RoutesPage } from './manager/RoutesPage';
+import { StockPage } from './manager/StockPage';
+import { SuppliersPage } from './manager/SuppliersPage';
 import { UsersPage } from './manager/UsersPage';
 import { VenuesPage } from './manager/VenuesPage';
 import { EnrolPage } from './pages/EnrolPage';
@@ -67,13 +73,19 @@ export function App() {
           </RequireKind>
         }
       >
-        <Route index element={<Navigate to="products" replace />} />
+        <Route index element={<ManagerHome />} />
         <Route path="venues" element={<VenuesPage />} />
         <Route path="users" element={<UsersPage />} />
         <Route path="devices" element={<DevicesPage />} />
         <Route path="routes" element={<RoutesPage />} />
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="products" element={<ProductsPage />} />
+        <Route path="printers" element={<PrintersPage />} />
+        <Route path="stock" element={<StockPage />} />
+        <Route path="receipts" element={<GoodsReceiptsPage />} />
+        <Route path="counts" element={<CountsPage />} />
+        <Route path="suppliers" element={<SuppliersPage />} />
+        <Route path="locks" element={<LocksPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

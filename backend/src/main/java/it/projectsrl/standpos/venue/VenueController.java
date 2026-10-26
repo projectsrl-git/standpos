@@ -39,14 +39,17 @@ class VenueController {
             LocalTime dayChangeTime,
             @Size(max = 500) String receiptHeader,
             @Size(max = 500) String receiptFooter,
-            Boolean active) {}
+            Boolean active,
+            Boolean allowNegativeStock) {}
 
     record VenueResponse(UUID id, String name, Venue.Kind kind, String timeZone, LocalTime dayChangeTime,
-            String receiptHeader, String receiptFooter, Venue.TicketMode ticketMode, boolean active) {
+            String receiptHeader, String receiptFooter, Venue.TicketMode ticketMode, boolean active,
+            boolean allowNegativeStock) {
 
         static VenueResponse of(Venue v) {
             return new VenueResponse(v.getId(), v.getName(), v.getKind(), v.getTimeZone(), v.getDayChangeTime(),
-                    v.getReceiptHeader(), v.getReceiptFooter(), v.getTicketMode(), v.isActive());
+                    v.getReceiptHeader(), v.getReceiptFooter(), v.getTicketMode(), v.isActive(),
+                    v.isAllowNegativeStock());
         }
     }
 
@@ -100,6 +103,7 @@ class VenueController {
         }
         venue.update(r.name().trim(), r.kind(), zone,
                 r.dayChangeTime() == null ? venue.getDayChangeTime() : r.dayChangeTime(),
-                r.receiptHeader(), r.receiptFooter(), r.active() == null || r.active());
+                r.receiptHeader(), r.receiptFooter(), r.active() == null || r.active(),
+                r.allowNegativeStock() == null ? venue.isAllowNegativeStock() : r.allowNegativeStock());
     }
 }
