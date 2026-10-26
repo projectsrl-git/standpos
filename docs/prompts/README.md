@@ -4,8 +4,8 @@ Each file is a self-contained brief for one development phase, meant to be paste
 
 | Phase | File | Status |
 | --- | --- | --- |
-| 0 · Foundations | [phase-0.md](phase-0.md) | Ready |
-| 1 · Register and stock | [phase-1.md](phase-1.md) | Draft |
+| 0 · Foundations | [phase-0.md](phase-0.md) | Done (0.1.0, PR #1) |
+| 1 · Register and stock | [phase-1.md](phase-1.md) | Ready |
 | 2 · SumUp Solo | [phase-2.md](phase-2.md) | Draft |
 | 3 · Tickets and reports | [phase-3.md](phase-3.md) | Draft |
 | 4 · SaaS onboarding | [phase-4.md](phase-4.md) | Draft |
