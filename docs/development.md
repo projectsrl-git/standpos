@@ -16,8 +16,8 @@ How to build, run and test StandPOS on a developer machine.
 ```
 pom.xml            Maven parent (Spring Boot 4.1, Java 25)
 backend/           Spring Boot application, package it.projectsrl.standpos.<feature>
-print-protocol/    Shared print document model (placeholder in Phase 0)
-print-agent/       Windows print agent (placeholder in Phase 0)
+print-protocol/    Structured print document, job, ack and heartbeat shared by backend and agent
+print-agent/       Windows print agent: STOMP client, SQLite queue, ESC/POS (escpos-coffee), jpackage + WinSW
 frontend/          React + TypeScript PWA (Vite)
 deploy/            docker-compose.yml, docker-compose.dev.yml, Caddyfile, .env.example, scripts
 docs/              SPEC.md, ADRs, guides, phase prompts
@@ -47,7 +47,20 @@ docs/              SPEC.md, ADRs, guides, phase prompts
    npm run dev
    ```
 
-4. Walk the Phase 0 flow: log in as the owner, create a category and a product, open **Dispositivi** and generate a code for a *Cassa*, go to `/enrol` and enter it, then on `/pin` pick the owner and type `1234`. The register page shows the product.
+4. Walk the flow: log in as the owner, create a category and a product with **Gestisci magazzino**, post a goods receipt in **Carichi**, open **Dispositivi** and generate a code for a *Cassa*, go to `/enrol` and enter it, then on `/pin` pick the owner and type `1234`. Open the shift, sell for cash and watch the stock change in **Magazzino**.
+
+5. Optionally run the print agent against the dev backend, printing to a file instead of a printer. Generate an *Agente di stampa* code in **Dispositivi**, then:
+
+   ```bash
+   ./mvnw -B -pl print-agent -am package -DskipTests
+   export STANDPOS_AGENT_HOME=/tmp/standpos-agent        # instead of %ProgramData%\StandPOS\PrintAgent
+   java -jar print-agent/target/print-agent-0.2.0.jar enrol --server http://localhost:8080 --code ABCD2345
+   java -jar print-agent/target/print-agent-0.2.0.jar run
+   ```
+
+   In **Stampanti** add a printer on that agent with the Windows name `file:/tmp/standpos-agent/paper.bin`, link it to the register and press **Stampa di prova**: the ESC/POS bytes land in that file. Plain `http://` is accepted only for `localhost` and `.test` hosts. The Windows packaging is in [print-agent-setup.md](print-agent-setup.md).
+
+The Vite dev server proxies `/api` and the WebSocket endpoint `/ws`; the `dev` profile allows its origin (`standpos.websocket.allowed-origins`).
 
 In the `dev` profile cookies are not marked `Secure` (Vite serves plain HTTP) and logs are plain text; every other profile logs structured JSON (ECS) with a `requestId` on each line.
 
@@ -59,7 +72,13 @@ cd frontend && npm run lint && npm test && npm run build
 ```
 
 - Unit tests are `*Test` (Surefire); integration tests are `*IT` (Failsafe) and start a `postgres:17-alpine` container through Testcontainers, initialised with `deploy/postgres/initdb/10-standpos-roles.sh`.
-- The key suites: `RlsIsolationIT` and `RlsCoverageIT` (tenant isolation, acceptance criteria 2 and 3), `AuthIT` (login, lockout, CSRF, PIN, devices), `ControllerAuthorizationCoverageIT` (every endpoint has a rule), `CatalogIT`.
+- The key suites: `RlsIsolationIT` and `RlsCoverageIT` (tenant isolation on every tenant-owned table, append-only `audit_log` and `stock_movement`), `AuthIT` (login, lockout, CSRF, PIN, devices), `ControllerAuthorizationCoverageIT` (every endpoint has a rule), `CatalogIT`, and from Phase 1:
+  - `SalesIT`: cash and manual card sales, idempotent retries, two registers racing for the last unit, daily number and day change, usage cap at 80%/100%/day change, voids, products in use;
+  - `StockIT`: goods receipts, counts, adjustments, roles, and the ledger property test (movements always add up to the levels);
+  - `UnlockIT`, `AgentEnrolmentIT`;
+  - `RealtimeIT`: a running server (random port) with STOMP clients: job delivery to the agent, acknowledgements, live stock events, refused subscriptions, revocation.
+- Tests that need a fixed time set the application clock: `IntegrationTest` exposes a `MutableClock` (`clock.set(Instant)`), reset after each test.
+- The print agent's own tests (ESC/POS bytes, STOMP codec, SQLite queue, a fake server end to end) run in `print-agent` with no printer and no network.
 
 ### Without Docker
 

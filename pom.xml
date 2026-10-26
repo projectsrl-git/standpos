@@ -13,7 +13,7 @@
 
   <groupId>it.projectsrl.standpos</groupId>
   <artifactId>standpos-parent</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
   <packaging>pom</packaging>
   <name>StandPOS</name>
   <description>Hosted multi-tenant point of sale for non-profit associations</description>
