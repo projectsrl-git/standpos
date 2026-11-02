@@ -4,15 +4,20 @@ import { api } from '../api/client';
 import type { Order } from '../api/types';
 import { Dialog } from '../components/Dialog';
 import { ErrorBanner } from '../components/ErrorBanner';
+import { ReceiptPreviewDialog } from '../components/ReceiptPreviewDialog';
 import { formatCents } from '../money';
 import { VoidDialog } from './VoidDialog';
 
-/** Today's orders of the venue: receipt state, "Ristampa" (or a late receipt) and voids with a manager PIN. */
+/**
+ * Today's orders of the venue: receipt state, the receipt on screen, "Ristampa" (or a late receipt) and voids with a
+ * manager PIN.
+ */
 export function OrdersPanel({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
   const [orders, setOrders] = useState<Order[]>([]);
   const [error, setError] = useState<unknown>(null);
   const [voiding, setVoiding] = useState<Order | null>(null);
+  const [showing, setShowing] = useState<Order | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -57,6 +62,11 @@ export function OrdersPanel({ onClose }: { onClose: () => void }) {
             <span>{o.payment ? t(`payment.methods.${o.payment.method}`) : ''}</span>
             <span>{o.status === 'VOIDED' ? t('orders.voided') : t(`orders.receipt.${o.receipt}`)}</span>
             <span className="row-actions">
+              {o.payment && (
+                <button className="btn btn-small" type="button" onClick={() => setShowing(o)}>
+                  {t('orders.showReceipt')}
+                </button>
+              )}
               {o.status === 'PAID' && (
                 <>
                   <button className="btn btn-small" type="button" onClick={() => void print(o)}>
@@ -71,6 +81,14 @@ export function OrdersPanel({ onClose }: { onClose: () => void }) {
           </li>
         ))}
       </ul>
+      {showing && (
+        <ReceiptPreviewDialog
+          path={`/register/orders/${showing.id}/receipt-preview`}
+          number={showing.dailyNumber}
+          voided={showing.status === 'VOIDED'}
+          onClose={() => setShowing(null)}
+        />
+      )}
       {voiding && (
         <VoidDialog
           order={voiding}

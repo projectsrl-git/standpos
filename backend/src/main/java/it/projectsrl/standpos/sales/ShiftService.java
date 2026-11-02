@@ -4,6 +4,7 @@ import it.projectsrl.standpos.auth.MembershipRepository;
 import it.projectsrl.standpos.auth.Role;
 import it.projectsrl.standpos.common.ApiException;
 import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -42,6 +43,12 @@ public class ShiftService {
     @Transactional(readOnly = true)
     public Optional<Summary> current(RegisterSession session) {
         return shifts.findByDeviceIdAndClosedAtIsNull(session.deviceId()).map(this::summary);
+    }
+
+    /** The venue's shifts open at some point in [from, to), oldest first, each with its whole-shift figures. */
+    @Transactional(readOnly = true)
+    public List<Summary> ofVenue(UUID venueId, Instant from, Instant to) {
+        return shifts.findAllOverlapping(venueId, from, to).stream().map(this::summary).toList();
     }
 
     public Summary open(RegisterSession session, long openingFloatCents) {

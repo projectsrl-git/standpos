@@ -13,6 +13,8 @@ Hosted, multi-tenant point of sale for non-profit associations, parish youth cen
 
 **0.2.0 — Phase 1, Register and stock.** Cash and manual card sales on the register with change, "Senza scontrino", daily order numbers, reprint and voids with a manager PIN, cash drawer shifts; a per-product stock ledger with goods receipts, counts, adjustments and waste, thresholds and automatic sold-out pushed live over WebSocket; the monthly usage cap; courtesy receipts printed by the Windows print agent on the register's POS80. Built on Phase 0: multi-tenant PostgreSQL with Row-Level Security, logins, devices, catalogue, Docker Compose and CI. SumUp card payments arrive in Phase 2, bar and kitchen tickets and reports in Phase 3. See [CHANGELOG.md](CHANGELOG.md).
 
+**Unreleased.** Coin and note buttons that add up the cash received, the courtesy receipt on screen (registers without a printer, and on demand), and an "Ordini e turni" page in the manager area with a day's orders, shifts and totals per cashier.
+
 ## Quick start (Docker Compose)
 
 Requires Docker with Compose v2.

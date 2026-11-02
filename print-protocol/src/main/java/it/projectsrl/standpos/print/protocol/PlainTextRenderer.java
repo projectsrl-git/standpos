@@ -4,11 +4,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Lays a document out as plain text lines, the way the printer does: used for previews, tests and by the agent's
- * ESC/POS renderer for wrapping and alignment. Double-width text takes two columns per character. Logos, cuts and
- * drawer kicks appear as markers in brackets.
+ * Lays a document out as plain text lines, the way the printer does: used for the on-screen receipt preview, tests
+ * and by the agent's ESC/POS renderer for wrapping and alignment. Double-width text takes two columns per character.
+ * Logos, cuts and drawer kicks appear as markers in brackets.
  */
 public final class PlainTextRenderer {
+
+    /** A laid-out line with the style the printer gives it: what an on-screen preview needs. */
+    public record Line(String text, boolean bold, PrintElement.Size size) {
+
+        static Line plain(String text) {
+            return new Line(text, false, PrintElement.Size.NORMAL);
+        }
+    }
 
     private final int columns;
 
@@ -17,20 +25,29 @@ public final class PlainTextRenderer {
     }
 
     public List<String> render(PrintDocument document) {
-        List<String> out = new ArrayList<>();
+        return lines(document).stream().map(Line::text).toList();
+    }
+
+    /**
+     * The document as styled lines. Lines of a double-width size hold half the columns, so a preview that draws them
+     * twice as wide keeps the paper width.
+     */
+    public List<Line> lines(PrintDocument document) {
+        List<Line> out = new ArrayList<>();
         for (PrintElement element : document.elements()) {
             switch (element) {
-                case PrintElement.Text t -> out.addAll(text(t));
-                case PrintElement.Row r -> out.addAll(row(r.left(), r.right(), width(r.size())));
-                case PrintElement.Separator s -> out.add(separator());
+                case PrintElement.Text t -> text(t).forEach(line -> out.add(new Line(line, t.bold(), t.size())));
+                case PrintElement.Row r -> row(r.left(), r.right(), width(r.size()))
+                        .forEach(line -> out.add(new Line(line, r.bold(), r.size())));
+                case PrintElement.Separator s -> out.add(Line.plain(separator()));
                 case PrintElement.Feed f -> {
                     for (int i = 0; i < f.lines(); i++) {
-                        out.add("");
+                        out.add(Line.plain(""));
                     }
                 }
-                case PrintElement.Logo l -> out.add("[logo]");
-                case PrintElement.Cut c -> out.add("[cut]");
-                case PrintElement.DrawerKick d -> out.add("[drawer]");
+                case PrintElement.Logo l -> out.add(Line.plain("[logo]"));
+                case PrintElement.Cut c -> out.add(Line.plain("[cut]"));
+                case PrintElement.DrawerKick d -> out.add(Line.plain("[drawer]"));
             }
         }
         return out;

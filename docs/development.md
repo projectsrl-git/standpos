@@ -74,6 +74,7 @@ cd frontend && npm run lint && npm test && npm run build
 - Unit tests are `*Test` (Surefire); integration tests are `*IT` (Failsafe) and start a `postgres:17-alpine` container through Testcontainers, initialised with `deploy/postgres/initdb/10-standpos-roles.sh`.
 - The key suites: `RlsIsolationIT` and `RlsCoverageIT` (tenant isolation on every tenant-owned table, append-only `audit_log` and `stock_movement`), `AuthIT` (login, lockout, CSRF, PIN, devices), `ControllerAuthorizationCoverageIT` (every endpoint has a rule), `CatalogIT`, and from Phase 1:
   - `SalesIT`: cash and manual card sales, idempotent retries, two registers racing for the last unit, daily number and day change, usage cap at 80%/100%/day change, voids, products in use;
+  - `DayOverviewIT`: the manager's day overview (orders, shifts overlapping the business day, totals per cashier, default day by the venue's day change, who may see it) and the on-screen receipt preview from the register and the manager area;
   - `StockIT`: goods receipts, counts, adjustments, roles, and the ledger property test (movements always add up to the levels);
   - `UnlockIT`, `AgentEnrolmentIT`;
   - `RealtimeIT`: a running server (random port) with STOMP clients: job delivery to the agent, acknowledgements, live stock events, refused subscriptions, revocation.

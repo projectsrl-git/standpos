@@ -308,3 +308,76 @@ export interface GridProduct {
   /** At or below the low threshold: the register shows what is left. */
   low: boolean;
 }
+
+export type PrintSize = 'NORMAL' | 'DOUBLE_HEIGHT' | 'DOUBLE_WIDTH' | 'DOUBLE';
+
+/** The server-built courtesy receipt laid out as it prints: lines of at most `columns` characters (half when wide). */
+export interface ReceiptPreview {
+  columns: number;
+  lines: { text: string; bold: boolean; size: PrintSize }[];
+}
+
+export interface DayOverviewOrder {
+  id: string;
+  dailyNumber: number;
+  createdAt: string;
+  paidAt: string | null;
+  cashierId: string;
+  cashierName: string | null;
+  registerId: string;
+  registerName: string | null;
+  paymentMethod: PaymentMethod | null;
+  totalCents: number;
+  status: Order['status'];
+  receipt: ReceiptState;
+  receiptPrinted: boolean;
+  voidedAt: string | null;
+  voidReason: string | null;
+}
+
+export interface DayOverviewShift {
+  id: string;
+  registerId: string;
+  registerName: string | null;
+  cashierId: string;
+  cashierName: string | null;
+  openedAt: string;
+  closedAt: string | null;
+  openingFloatCents: number;
+  paidOrders: number;
+  voidedOrders: number;
+  cashSalesCents: number;
+  manualCardCents: number;
+  expectedCashCents: number;
+  countedCashCents: number | null;
+  differenceCents: number | null;
+}
+
+export interface DayOverviewCashier {
+  cashierId: string;
+  cashierName: string | null;
+  shifts: number;
+  paidOrders: number;
+  voidedOrders: number;
+  cashSalesCents: number;
+  manualCardCents: number;
+  totalCents: number;
+  differenceCents: number | null;
+}
+
+/** GET /venues/{venueId}/day-overview: a business day's orders, shifts and totals per cashier. */
+export interface DayOverview {
+  businessDate: string;
+  today: string;
+  timeZone: string;
+  orders: DayOverviewOrder[];
+  shifts: DayOverviewShift[];
+  cashiers: DayOverviewCashier[];
+  totals: {
+    paidOrders: number;
+    voidedOrders: number;
+    cashCents: number;
+    cardCents: number;
+    totalCents: number;
+  };
+}

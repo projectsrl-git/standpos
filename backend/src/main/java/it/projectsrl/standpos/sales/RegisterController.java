@@ -96,6 +96,7 @@ class RegisterController {
     record StatusResponse(ShiftResponse shift, PrinterStatus printer, UsageBanner usage) {}
 
     private final OrderService orders;
+    private final ReceiptPreviews previews;
     private final ShiftService shifts;
     private final PinLoginService pins;
     private final PrintService prints;
@@ -104,9 +105,10 @@ class RegisterController {
     private final VenueRepository venues;
     private final Clock clock;
 
-    RegisterController(OrderService orders, ShiftService shifts, PinLoginService pins, PrintService prints,
-            AgentPresence presence, UsageService usage, VenueRepository venues, Clock clock) {
+    RegisterController(OrderService orders, ReceiptPreviews previews, ShiftService shifts, PinLoginService pins,
+            PrintService prints, AgentPresence presence, UsageService usage, VenueRepository venues, Clock clock) {
         this.orders = orders;
+        this.previews = previews;
         this.shifts = shifts;
         this.pins = pins;
         this.prints = prints;
@@ -139,6 +141,13 @@ class RegisterController {
     @PreAuthorize("@authz.isCashier()")
     OrderResponse printReceipt(@PathVariable UUID orderId) {
         return OrderResponse.of(orders.printReceipt(RegisterSession.current(), orderId));
+    }
+
+    /** The courtesy receipt as it prints, for the screen: when the register has no printer, or on demand. */
+    @GetMapping("/register/orders/{orderId}/receipt-preview")
+    @PreAuthorize("@authz.isCashier()")
+    ReceiptPreviews.Preview receiptPreview(@PathVariable UUID orderId) {
+        return previews.of(RegisterSession.current().venueId(), orderId);
     }
 
     @PostMapping("/register/orders/{orderId}/void")

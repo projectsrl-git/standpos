@@ -112,6 +112,7 @@ export function ManagerLayout() {
         </button>
       </header>
       <nav className="tabs">
+        {manager && <NavLink to="/manager/day">{t('manager.nav.day')}</NavLink>}
         {owner && <NavLink to="/manager/venues">{t('manager.nav.venues')}</NavLink>}
         {owner && <NavLink to="/manager/users">{t('manager.nav.users')}</NavLink>}
         {manager && <NavLink to="/manager/devices">{t('manager.nav.devices')}</NavLink>}

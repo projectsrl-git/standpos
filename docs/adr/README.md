@@ -16,3 +16,5 @@ Short records of decisions the specification left open. Each states the context,
 | [0010](0010-print-agent-enrolment.md) | Print agent enrolment endpoint | 1 |
 | [0011](0011-print-agent-service-wrapper.md) | Print agent service wrapper | 1 |
 | [0012](0012-print-job-pipeline.md) | Print job pipeline | 1 |
+| [0013](0013-on-screen-receipt-preview.md) | On-screen receipt preview | 1 |
+| [0014](0014-day-overview.md) | Day overview of orders and shifts for managers | 1 |
