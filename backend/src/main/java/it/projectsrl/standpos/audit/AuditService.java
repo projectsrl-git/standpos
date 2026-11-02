@@ -29,6 +29,12 @@ public class AuditService {
         entityManager.persist(new AuditLog(userId, deviceId, action, entityType, entityId, toJson(before), toJson(after)));
     }
 
+    /** For changes made before anyone is logged in (sign-up): attributed to {@code userId}. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void recordAs(UUID userId, String action, String entityType, UUID entityId, Object before, Object after) {
+        entityManager.persist(new AuditLog(userId, null, action, entityType, entityId, toJson(before), toJson(after)));
+    }
+
     private String toJson(Object value) {
         return value == null ? null : json.writeValueAsString(value);
     }

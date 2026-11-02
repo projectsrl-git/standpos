@@ -16,6 +16,8 @@ server:
 standpos:
   security:
     secure-cookies: false
+  signup:
+    enabled: true
   websocket:
     # The Vite dev server (http://localhost:5173) proxies /ws: its origin differs from the backend's.
     allowed-origins: http://localhost:5173

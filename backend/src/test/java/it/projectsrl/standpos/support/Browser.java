@@ -19,6 +19,7 @@ public class Browser {
     private final MockMvc mvc;
     private final Map<String, String> cookies = new LinkedHashMap<>();
     private boolean sendCsrf = true;
+    private String remoteAddr;
 
     Browser(MockMvc mvc) {
         this.mvc = mvc;
@@ -26,6 +27,12 @@ public class Browser {
 
     public Browser withoutCsrfHeader() {
         sendCsrf = false;
+        return this;
+    }
+
+    /** Sends every request from this client address (per-IP rate limits). */
+    public Browser withRemoteAddr(String address) {
+        remoteAddr = address;
         return this;
     }
 
@@ -49,6 +56,12 @@ public class Browser {
         MockHttpServletRequestBuilder prepared = withCookies(request);
         if (sendCsrf && cookies.containsKey("XSRF-TOKEN")) {
             prepared.header("X-XSRF-TOKEN", cookies.get("XSRF-TOKEN"));
+        }
+        if (remoteAddr != null) {
+            prepared.with(r -> {
+                r.setRemoteAddr(remoteAddr);
+                return r;
+            });
         }
         ResultActions actions = mvc.perform(prepared);
         store(actions.andReturn());
