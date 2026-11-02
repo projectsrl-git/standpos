@@ -82,6 +82,19 @@ cd frontend && npm run lint && npm test && npm run build
 - Tests that need a fixed time set the application clock: `IntegrationTest` exposes a `MutableClock` (`clock.set(Instant)`), reset after each test.
 - The print agent's own tests (ESC/POS bytes, STOMP codec, SQLite queue, a fake server end to end) run in `print-agent` with no printer and no network.
 
+### End-to-end suite against a running instance
+
+`tests/e2e` holds a Windows PowerShell 5.1 suite that drives a running StandPOS through its REST API (owner login,
+catalogue, stock, devices, register sales, voids, receipt previews, day overview, usage, self-service sign-up) and leaves a demo catalogue and a few sales behind:
+
+```powershell
+.\tests\e2e\Run-All.ps1 -Target local                                   # local demo, http://127.0.0.1:8088
+.\tests\e2e\Run-All.ps1 -BaseUrl https://demo.example -EnvFile .\demo.env  # any instance
+```
+
+It writes to the owner's tenant. Usage, coverage and the test data are described in
+[tests/e2e/README.md](../tests/e2e/README.md).
+
 ### Without Docker
 
 Point the integration tests at an existing, empty PostgreSQL 17 database initialised with the role script (see [ADR 0006](adr/0006-integration-test-database.md)):

@@ -1,0 +1,78 @@
+{
+  "_comment": "Demo data of an oratorio bar for the E2E suite. Prices and costs in integer euro cents. Entities are reused by name on re-runs.",
+  "routes": [
+    { "name": "Bar", "sort": 10 },
+    { "name": "Cucina", "sort": 20 }
+  ],
+  "categories": [
+    { "name": "Bibite", "colour": "#1E88E5", "sort": 10, "route": "Bar" },
+    { "name": "Caffetteria", "colour": "#6D4C41", "sort": 20, "route": "Bar" },
+    { "name": "Panini", "colour": "#E64A19", "sort": 30, "route": "Cucina" },
+    { "name": "Dolci", "colour": "#8E24AA", "sort": 40, "route": "Bar" }
+  ],
+  "products": [
+    { "name": "Acqua naturale 0,5 L", "category": "Bibite", "priceCents": 100, "trackStock": true, "lowThreshold": 12, "sort": 10 },
+    { "name": "Acqua frizzante 0,5 L", "category": "Bibite", "priceCents": 100, "trackStock": true, "lowThreshold": 12, "sort": 20 },
+    { "name": "Coca-Cola lattina", "category": "Bibite", "priceCents": 250, "trackStock": true, "lowThreshold": 12, "sort": 30 },
+    { "name": "Aranciata lattina", "category": "Bibite", "priceCents": 250, "trackStock": true, "lowThreshold": 12, "sort": 40 },
+    { "name": "Tè freddo alla pesca", "category": "Bibite", "priceCents": 250, "trackStock": true, "lowThreshold": 12, "sort": 50 },
+    { "name": "Birra media", "category": "Bibite", "priceCents": 400, "trackStock": false, "sort": 60 },
+    { "name": "Caffè", "category": "Caffetteria", "priceCents": 100, "trackStock": false, "sort": 10 },
+    { "name": "Cappuccino", "category": "Caffetteria", "priceCents": 150, "trackStock": false, "sort": 20 },
+    { "name": "Cioccolata calda", "category": "Caffetteria", "priceCents": 200, "trackStock": false, "sort": 30 },
+    { "name": "Panino con salamella", "category": "Panini", "priceCents": 450, "trackStock": true, "lowThreshold": 10, "sort": 10 },
+    { "name": "Panino con porchetta", "category": "Panini", "priceCents": 500, "trackStock": true, "lowThreshold": 10, "sort": 20 },
+    { "name": "Toast prosciutto e formaggio", "category": "Panini", "priceCents": 300, "trackStock": false, "sort": 30 },
+    { "name": "Patatine fritte", "category": "Panini", "priceCents": 300, "trackStock": false, "sort": 40 },
+    { "name": "Krapfen alla crema", "category": "Dolci", "priceCents": 150, "trackStock": true, "lowThreshold": 8, "sort": 10 },
+    { "name": "Ghiacciolo", "category": "Dolci", "priceCents": 100, "trackStock": true, "lowThreshold": 10, "sort": 20 },
+    { "name": "Fetta di torta della nonna", "category": "Dolci", "priceCents": 250, "trackStock": false, "route": "Bar", "sort": 30 }
+  ],
+  "suppliers": [
+    { "name": "Bevande Rossi srl", "contactName": "Marco Rossi", "phone": "+39 000 0000001", "email": "ordini@bevande-rossi.example", "notes": "Consegna il martedì. Dati di prova." },
+    { "name": "Salumeria e Panificio San Giuseppe", "contactName": "Anna Bianchi", "phone": "+39 000 0000002", "email": "anna@panificio-sangiuseppe.example", "notes": "Pane e salamelle il venerdì. Dati di prova." }
+  ],
+  "goodsReceipts": [
+    {
+      "supplier": "Bevande Rossi srl",
+      "notes": "Rifornimento bibite",
+      "lines": [
+        { "product": "Acqua naturale 0,5 L", "quantity": 24, "unitCostCents": 25 },
+        { "product": "Acqua frizzante 0,5 L", "quantity": 24, "unitCostCents": 25 },
+        { "product": "Coca-Cola lattina", "quantity": 24, "unitCostCents": 60 },
+        { "product": "Aranciata lattina", "quantity": 24, "unitCostCents": 55 },
+        { "product": "Tè freddo alla pesca", "quantity": 24, "unitCostCents": 55 }
+      ]
+    },
+    {
+      "supplier": "Salumeria e Panificio San Giuseppe",
+      "notes": "Panini e dolci per il weekend",
+      "lines": [
+        { "product": "Panino con salamella", "quantity": 40, "unitCostCents": 140 },
+        { "product": "Panino con porchetta", "quantity": 30, "unitCostCents": 170 },
+        { "product": "Krapfen alla crema", "quantity": 20, "unitCostCents": 55 },
+        { "product": "Ghiacciolo", "quantity": 30, "unitCostCents": 30 }
+      ]
+    }
+  ],
+  "starterCatalog": {
+    "_comment": "The setup wizard's example catalogue as the Italian UI creates it (frontend/src/manager/setup/starterCatalog.ts with i18n setup.starter): no stock tracking.",
+    "routes": [ { "name": "Bar", "sort": 0 }, { "name": "Cucina", "sort": 1 } ],
+    "categories": [
+      { "name": "Bevande", "colour": "#1E88E5", "route": "Bar", "products": [ { "name": "Acqua naturale", "priceCents": 100 }, { "name": "Bibita in lattina", "priceCents": 250 }, { "name": "Caffè", "priceCents": 100 } ] },
+      { "name": "Piatti e panini", "colour": "#E53935", "route": "Cucina", "products": [ { "name": "Panino con salamella", "priceCents": 500 }, { "name": "Patatine fritte", "priceCents": 300 }, { "name": "Toast", "priceCents": 300 } ] },
+      { "name": "Dolci", "colour": "#8E24AA", "route": "Bar", "products": [ { "name": "Fetta di torta", "priceCents": 250 }, { "name": "Gelato", "priceCents": 200 } ] }
+    ]
+  },
+  "demoSales": [
+    { "paymentMethod": "CASH", "tenderedPieces": [500], "printReceipt": true, "lines": [ { "product": "Caffè", "quantity": 2 }, { "product": "Fetta di torta della nonna", "quantity": 1 } ] },
+    { "paymentMethod": "CASH", "tenderedPieces": [1000, 200], "printReceipt": true, "lines": [ { "product": "Panino con porchetta", "quantity": 1 }, { "product": "Patatine fritte", "quantity": 1 }, { "product": "Birra media", "quantity": 1 } ] },
+    { "paymentMethod": "MANUAL_CARD", "printReceipt": true, "lines": [ { "product": "Cappuccino", "quantity": 2 }, { "product": "Krapfen alla crema", "quantity": 2 } ] },
+    { "paymentMethod": "CASH", "printReceipt": false, "lines": [ { "product": "Ghiacciolo", "quantity": 3 } ] },
+    { "paymentMethod": "CASH", "tenderedPieces": [1000], "printReceipt": true, "lines": [ { "product": "Toast prosciutto e formaggio", "quantity": 1, "note": "ben cotto" }, { "product": "Tè freddo alla pesca", "quantity": 1 }, { "product": "Acqua frizzante 0,5 L", "quantity": 1 } ] },
+    { "paymentMethod": "CASH", "tenderedPieces": [2000], "printReceipt": true, "lines": [ { "product": "Panino con salamella", "quantity": 2 }, { "product": "Coca-Cola lattina", "quantity": 2 } ] },
+    { "paymentMethod": "CASH", "tenderedPieces": [200, 50, 50], "printReceipt": true, "lines": [ { "product": "Krapfen alla crema", "quantity": 1 }, { "product": "Cappuccino", "quantity": 1 } ] },
+    { "paymentMethod": "CASH", "tenderedPieces": [5000], "printReceipt": true, "lines": [ { "product": "Birra media", "quantity": 2 }, { "product": "Patatine fritte", "quantity": 2 } ] },
+    { "paymentMethod": "CASH", "tenderedPieces": [500, 200], "printReceipt": true, "lines": [ { "product": "Panino con porchetta", "quantity": 1 }, { "product": "Acqua naturale 0,5 L", "quantity": 1 } ] }
+  ]
+}

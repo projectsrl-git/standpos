@@ -47,7 +47,7 @@ docker compose -f deploy/docker-compose.dev.yml up -d                 # PostgreS
 cd frontend && npm ci && npm run dev                                   # PWA on http://localhost:5173
 ```
 
-Tests: `./mvnw -B verify` (Testcontainers) and `cd frontend && npm run lint && npm test && npm run build`. Details in [docs/development.md](docs/development.md).
+Tests: `./mvnw -B verify` (Testcontainers) and `cd frontend && npm run lint && npm test && npm run build`. Details in [docs/development.md](docs/development.md). An end-to-end suite in PowerShell exercises a running instance through the API and fills it with demo data: `.\tests\e2e\Run-All.ps1 -Target local` ([tests/e2e/README.md](tests/e2e/README.md)).
 
 ## Repository layout
 
@@ -56,6 +56,7 @@ backend/         Spring Boot 4 (Java 25), PostgreSQL 17 with Row-Level Security
 print-protocol/  Structured print document shared by the backend and the print agent
 print-agent/     Windows service printing ESC/POS on the register's USB printer
 frontend/        React + TypeScript PWA (register and manager area)
+tests/e2e/       PowerShell end-to-end suite against a running instance (REST API)
 deploy/          Docker Compose, Caddyfile, environment template, database and backup scripts
 docs/            Specification, ADRs, guides, phase prompts
 ```
