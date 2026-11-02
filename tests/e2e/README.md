@@ -29,7 +29,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tests\e2e\Run-All.ps1 
 | `-VenueName` | `STANDPOS_BOOTSTRAP_VENUE_NAME`, else the first venue | Venue under test |
 | `-Only` | all | Wildcards on script names, e.g. `'0[1-4]*'`; later scripts need the data of earlier ones |
 
-Exit codes: `0` all steps passed, `1` a step failed, `2` setup error (no URL, env file, or the target's
+Exit codes: `0` all steps passed (some may be skipped, with the reason in the summary), `1` a step failed, `2` setup error (no URL, env file, or the target's
 `/actuator/health` is not `UP`). Secrets from the env file are never printed.
 
 ## Layout
@@ -60,6 +60,8 @@ The helper module:
   suite can be run several times in a row.
 - `Assert-Equal`, `Assert-True`, `Assert-NotNull`, `Assert-Status`, `Assert-Problem` (status, `code` and the RFC 9457
   members).
+- `Skip-Step` records a step as skipped with its reason (a feature the target has switched off or rate-limited);
+  `Assert-ReceiptPreview` checks a server-built receipt preview against its order.
 
 ## What is covered
 
@@ -74,6 +76,7 @@ The helper module:
 | `07-Register` | cashiers list, PIN login (wrong PIN, user of another venue), cashier kept out of the manager area (day overview included), shift open/close with counted cash and difference, register status and grid, cash sale with change and line snapshots, idempotent retry with the same client UUID (200, nothing sold twice), the same UUID from a second register (409), "senza scontrino" and later receipt, manual card with a line note, refused sales (SumUp, tender, quantity, stock), sold-out by hand, void approved by a manager PIN (wrong PIN, cashier as approver, missing lines, back to stock vs waste, not voidable twice), demo sales paid with the cash dialog's notes and coins (e.g. 12,00 with 10 + 2) and change in integer cents, receipt preview from the register and the manager area (fixed non-fiscal line, order number, line amounts, total, cash and change or card; voided orders too; 404 for unknown orders or another venue, 403 for a cashier on the manager path), a second register without a printer where a sale "with receipt" lists as not printed (known, accepted behaviour) and the preview stands in for it, orders of the day |
 | `08-DayOverview` | "Ordini e turni" (`/day-overview`): default date is today in the venue's time zone and day change, explicit date, every order of the run with total, payment, status, cashier and register, day totals grown by exactly the run's cash and card sales and agreeing with the order rows, the run's shifts with float, sales, expected and counted cash and difference, totals per cashier adding up their shifts, an empty day, malformed date, 403 for the manager of another venue (who sees their own venue) |
 | `09-Usage` | the month's sales counter grew by exactly the orders created, owner cannot change the cap, the run's devices are revoked and lose access |
+| `10-Signup` | self-service sign-up (ADR 0015): public availability and declarations version, CSRF required, missing declarations and short password refused (400 validation) with no session, a new organisation `E2E Associazione <run>` with an invented `.test` email signed up and logged in as owner, the new tenant empty and blind to the demo tenant (venues, users, suppliers, usage, the demo venue's id and a demo receipt), the setup wizard through the APIs it calls (a permanent venue and a festival, the starter catalogue, register and print agent enrolment codes, a cashier and a manager with PINs, the summary it reads back), a register of the new tenant enrolled with its code, PIN login, shift, a sale paid 5 + 2 EUR, receipt preview and day overview, then a second sign-up with the same email answering exactly like a new one without a session or any change |
 
 **Not covered** (needs other tools or a later phase): the WebSocket/STOMP channel (live stock events, print job
 delivery and acknowledgements by an agent: the queued jobs stay `QUEUED` because no agent of the suite connects),
@@ -88,6 +91,12 @@ integration tests (`./mvnw -B verify`) cover these at a lower level.
 Re-running is safe: routes, categories, products, suppliers, users, the event venue and the printer are looked up
 by name and reused. Every run adds two posted goods receipts, an adjustment, a waste and a stock count, two shifts
 and 14 orders (one of them voided), which count towards the tenant's monthly cap of 2,000 sales.
+
+`10-Signup` creates **one new tenant per run** (`E2E Associazione <run>`, owner `e2e-associazione-<run>@standpos.test`,
+with two venues, the starter catalogue, two people and one sale); there is no API to delete a tenant. Sign-up allows
+5 attempts per client address per hour and a run uses 2, so about two full runs an hour per target: beyond that the
+server answers `429 signup.rate_limited` and the sign-up steps are reported as **skipped** with the reason, as they
+are when sign-up is switched off (`GET /api/v1/auth/signup` answers 404). Skipped steps do not fail the run.
 
 Test-only entities are marked with **E2E**: users `E2E Cassiere`, `E2E Responsabile`, `E2E Volontario festa` and
 `E2E Responsabile festa` (the only one with an email, `e2e-responsabile-festa@standpos.test`), the venue

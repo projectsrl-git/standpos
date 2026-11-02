@@ -143,18 +143,24 @@ $elapsed = [int]((Get-Date) - $started).TotalSeconds
 
 Write-Host ''
 Write-Host '== Summary' -ForegroundColor Cyan
+$skippedSteps = @($results | Where-Object { $_.Outcome -eq 'SKIP' })
 foreach ($name in $scriptOutcome.Keys) {
     $outcome = $scriptOutcome[$name]
-    $steps = @($results | Where-Object { $_.Script -eq $name }).Count
-    $colour = switch ($outcome) { 'PASS' { 'Green' } 'FAIL' { 'Red' } default { 'Yellow' } }
-    Write-Host ("  {0,-8} {1,-28} {2,3} steps" -f $outcome, $name, $steps) -ForegroundColor $colour
+    $mine = @($results | Where-Object { $_.Script -eq $name })
+    $skips = @($mine | Where-Object { $_.Outcome -eq 'SKIP' }).Count
+    $colour = switch ($outcome) { 'PASS' { if ($skips) { 'Yellow' } else { 'Green' } } 'FAIL' { 'Red' } default { 'Yellow' } }
+    $note = if ($skips) { " ($skips skipped)" } else { '' }
+    Write-Host ("  {0,-8} {1,-28} {2,3} steps{3}" -f $outcome, $name, $mine.Count, $note) -ForegroundColor $colour
 }
 foreach ($f in $failedSteps) {
     Write-Host "  failed: $($f.Script) / $($f.Step): $($f.Error)" -ForegroundColor Red
 }
+foreach ($reason in @($skippedSteps | ForEach-Object { "$($_.Script): $($_.Error)" } | Select-Object -Unique)) {
+    Write-Host "  skipped: $reason" -ForegroundColor Yellow
+}
 $overall = if ($failed) { 'FAILED' } else { 'PASSED' }
-Write-Host ("  {0}: {1} steps passed, {2} failed, {3} scripts skipped, {4}s against {5}" -f $overall, $passed,
-    $failedSteps.Count, @($scriptOutcome.Values | Where-Object { $_ -eq 'SKIPPED' }).Count, $elapsed, $url) `
+Write-Host ("  {0}: {1} steps passed, {2} failed, {3} skipped, {4} scripts skipped, {5}s against {6}" -f $overall, $passed,
+    $failedSteps.Count, $skippedSteps.Count, @($scriptOutcome.Values | Where-Object { $_ -eq 'SKIPPED' }).Count, $elapsed, $url) `
     -ForegroundColor $(if ($failed) { 'Red' } else { 'Green' })
 
 if ($failed) { exit 1 }

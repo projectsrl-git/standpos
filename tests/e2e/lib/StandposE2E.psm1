@@ -461,6 +461,18 @@ function Test-Step {
     }
 }
 
+function Skip-Step {
+    <#
+    .SYNOPSIS
+        Records a step as SKIPPED with the reason, for a feature the target has switched off or cannot exercise now
+        (for example sign-up disabled, or its hourly limit reached). A skip is not a failure.
+    #>
+    param([Parameter(Mandatory)][string]$Name, [Parameter(Mandatory)][string]$Reason)
+    $script:Results.Add([pscustomobject]@{ Script = $script:CurrentScript; Step = $Name; Outcome = 'SKIP'; Ms = 0; Error = $Reason })
+    Write-Host ("  [SKIP] {0}" -f $Name) -ForegroundColor Yellow
+    Write-Host ("         {0}" -f $Reason) -ForegroundColor Yellow
+}
+
 function Write-Info {
     <# A line of information under the current script (never pass secrets). #>
     param([Parameter(Mandatory)][string]$Message)
@@ -474,4 +486,4 @@ function Get-TestResults {
 Export-ModuleMember -Function Read-EnvFile, Get-RunStamp, New-ApiClient, Get-ClientCookie, Invoke-Api, Format-Problem,
     Initialize-Csrf, Invoke-Login, Connect-Owner, Find-ByName, New-ClientUuid, Get-Today, Get-BusinessDate,
     Format-Cents, Format-Euro, Get-TenderCents, Assert-ReceiptPreview, Assert-True, Assert-Equal, Assert-NotNull,
-    Assert-Status, Assert-Problem, Start-TestScript, Test-Step, Write-Info, Get-TestResults
+    Assert-Status, Assert-Problem, Start-TestScript, Test-Step, Skip-Step, Write-Info, Get-TestResults

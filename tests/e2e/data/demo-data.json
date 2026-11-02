@@ -55,6 +55,15 @@
       ]
     }
   ],
+  "starterCatalog": {
+    "_comment": "The setup wizard's example catalogue as the Italian UI creates it (frontend/src/manager/setup/starterCatalog.ts with i18n setup.starter): no stock tracking.",
+    "routes": [ { "name": "Bar", "sort": 0 }, { "name": "Cucina", "sort": 1 } ],
+    "categories": [
+      { "name": "Bevande", "colour": "#1E88E5", "route": "Bar", "products": [ { "name": "Acqua naturale", "priceCents": 100 }, { "name": "Bibita in lattina", "priceCents": 250 }, { "name": "Caffè", "priceCents": 100 } ] },
+      { "name": "Piatti e panini", "colour": "#E53935", "route": "Cucina", "products": [ { "name": "Panino con salamella", "priceCents": 500 }, { "name": "Patatine fritte", "priceCents": 300 }, { "name": "Toast", "priceCents": 300 } ] },
+      { "name": "Dolci", "colour": "#8E24AA", "route": "Bar", "products": [ { "name": "Fetta di torta", "priceCents": 250 }, { "name": "Gelato", "priceCents": 200 } ] }
+    ]
+  },
   "demoSales": [
     { "paymentMethod": "CASH", "tenderedPieces": [500], "printReceipt": true, "lines": [ { "product": "Caffè", "quantity": 2 }, { "product": "Fetta di torta della nonna", "quantity": 1 } ] },
     { "paymentMethod": "CASH", "tenderedPieces": [1000, 200], "printReceipt": true, "lines": [ { "product": "Panino con porchetta", "quantity": 1 }, { "product": "Patatine fritte", "quantity": 1 }, { "product": "Birra media", "quantity": 1 } ] },
