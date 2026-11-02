@@ -9,6 +9,8 @@ Other associations can sign up and run StandPOS without the author's help, withi
 ## Scope
 
 - **Self-service sign-up:** organisation details, non-profit declaration, acknowledgement that receipts are non-fiscal and that the tenant is responsible for its own fiscal obligations; email verification.
+  - *Done ahead of the phase (2 November 2026, [ADR 0015](../adr/0015-self-service-sign-up.md)):* sign-up with the declarations, per-address rate limit and a generic answer for registered emails, behind `STANDPOS_SIGNUP_ENABLED` (on for dev and demo); the setup wizard for venues, example catalogue, register and print agent codes, cashiers and managers.
+  - *Still to do:* email verification (then sign-up can be enabled in production with a "check your inbox" answer that closes the enumeration gap), and an abuse policy for sign-ups beyond the per-address limit.
 - **Usage alerts:** 80% banner already exists; add the email to owners; monthly reset job.
 - **Platform admin console:** tenants, status, usage, cap override, audited support access.
 - **TOTP** for owners and managers (optional per user, enforced for platform admins).
@@ -19,6 +21,6 @@ Other associations can sign up and run StandPOS without the author's help, withi
 
 ## Acceptance criteria (draft)
 
-- A new association completes sign-up, catalogue, device enrolment and SumUp connection using only the in-app guides.
+- A new association completes sign-up, catalogue, device enrolment and SumUp connection using only the in-app guides (sign-up, catalogue and device enrolment: covered by the setup wizard).
 - Cap and alert behaviour covered by tests, including month rollover.
 - Docs: owner onboarding guide, platform admin runbook, production deployment guide, CHANGELOG `1.0.0`.

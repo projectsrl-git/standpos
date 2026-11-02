@@ -11,7 +11,9 @@ Hosted, multi-tenant point of sale for non-profit associations, parish youth cen
 
 ## Status
 
-**0.2.0 — Phase 1, Register and stock.** Cash and manual card sales on the register with change, "Senza scontrino", daily order numbers, reprint and voids with a manager PIN, cash drawer shifts; a per-product stock ledger with goods receipts, counts, adjustments and waste, thresholds and automatic sold-out pushed live over WebSocket; the monthly usage cap; courtesy receipts printed by the Windows print agent on the register's POS80. Built on Phase 0: multi-tenant PostgreSQL with Row-Level Security, logins, devices, catalogue, Docker Compose and CI. SumUp card payments arrive in Phase 2, bar and kitchen tickets and reports in Phase 3. See [CHANGELOG.md](CHANGELOG.md).
+**0.2.0 — Phase 1, Register and stock.** Cash and manual card sales on the register with change, "Senza scontrino", daily order numbers, reprint and voids with a manager PIN, cash drawer shifts; a per-product stock ledger with goods receipts, counts, adjustments and waste, thresholds and automatic sold-out pushed live over WebSocket; the monthly usage cap; courtesy receipts printed by the Windows print agent on the register's POS80. Built on Phase 0: multi-tenant PostgreSQL with Row-Level Security, logins, devices, catalogue, Docker Compose and CI. SumUp card payments arrive in Phase 2, bar and kitchen tickets and reports in Phase 3.
+
+Unreleased, brought forward from Phase 4: **self-service sign-up** ("Crea la tua associazione" on the login page, behind `STANDPOS_SIGNUP_ENABLED`, no email verification yet) and a **setup wizard** for venues, an example catalogue, registers and cashiers ([ADR 0015](docs/adr/0015-self-service-sign-up.md)). See [CHANGELOG.md](CHANGELOG.md).
 
 **Unreleased.** Coin and note buttons that add up the cash received, the courtesy receipt on screen (registers without a printer, and on demand), and an "Ordini e turni" page in the manager area with a day's orders, shifts and totals per cashier.
 
@@ -32,6 +34,8 @@ Open <https://localhost> (Caddy's internal CA: accept the certificate warning or
 3. **Dispositivi** → generate a code for a *Cassa*; open `/enrol` and enter it: this browser is now a register.
 4. On `/pin`, pick the cashier and type the PIN, open the shift with the cash float and sell.
 5. For printed receipts, install the print agent on the register PC ([docs/print-agent-setup.md](docs/print-agent-setup.md)) and add the printer in **Stampanti**. For stock, tick **Gestisci magazzino** on products and post a goods receipt in **Carichi** ([docs/guide-manager.md](docs/guide-manager.md)).
+
+Alternatively, with `STANDPOS_SIGNUP_ENABLED=true` in `deploy/.env` (demos only until email verification exists), skip the bootstrap: **Crea la tua associazione** on the login page creates an organisation and its owner, and the **Configurazione guidata** walks through venues, an example catalogue, register codes and cashiers.
 
 On a server with a real domain, set `STANDPOS_DOMAIN` and Caddy obtains a certificate automatically; see [docs/deploy-oracle.md](docs/deploy-oracle.md) for the Oracle Cloud demo.
 
@@ -67,7 +71,7 @@ docs/            Specification, ADRs, guides, phase prompts
 | [docs/print-agent-setup.md](docs/print-agent-setup.md) | Installing the print agent on the register PC |
 | [docs/pos80-checklist.md](docs/pos80-checklist.md) | Manual acceptance checklist on the real POS80 |
 | [docs/guide-cashier.md](docs/guide-cashier.md) | Guida rapida per la cassa (in Italian, for volunteers) |
-| [docs/guide-manager.md](docs/guide-manager.md) | Guida per titolari e gestori, magazzino (in Italian) |
+| [docs/guide-manager.md](docs/guide-manager.md) | Guida per titolari e gestori: primi passi, magazzino (in Italian) |
 | [docs/adr/](docs/adr/README.md) | Architecture decision records |
 | [docs/prompts/](docs/prompts/README.md) | One brief per development phase |
 | [CHANGELOG.md](CHANGELOG.md) | Release history |

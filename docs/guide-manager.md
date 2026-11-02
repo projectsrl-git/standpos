@@ -4,11 +4,37 @@ Questa guida spiega l'**area gestione** di StandPOS (accesso con email e passwor
 
 | Ruolo | Pagine |
 | --- | --- |
-| Titolare | tutte, per tutti i locali, più Locali e Utenti |
+| Titolare | tutte, per tutti i locali, più Locali, Utenti e Configurazione guidata |
 | Gestore (di un locale) | Ordini e turni, Dispositivi, Stampanti, Reparti, Categorie, Prodotti, Magazzino, Carichi, Inventari, Fornitori, Blocchi |
 | Magazziniere (di un locale) | Magazzino, Carichi, Inventari, Fornitori |
 
 Il locale su cui si lavora si sceglie in alto a destra.
+
+## Primi passi
+
+### Creare l'organizzazione
+
+Se il server lo consente, nella pagina di accesso compare **Crea la tua associazione**. Servono:
+
+- il nome dell'associazione, dell'oratorio o del comitato della festa;
+- il tuo nome, la tua email e una password di almeno 10 caratteri (sono quelle con cui entrerai nell'area gestione);
+- due dichiarazioni obbligatorie: che l'organizzazione è un **ente senza scopo di lucro**, e che sai che StandPOS emette **solo scontrini di cortesia, non fiscali** e che gli obblighi fiscali restano dell'organizzazione. Un bar aperto tutto l'anno è spesso un'attività commerciale: nel dubbio chiedi al vostro commercialista **prima** di iniziare a vendere.
+
+Diventi il **titolare** e si apre subito la configurazione guidata. Il piano è gratuito fino a 2.000 vendite al mese. Se l'email è già registrata la pagina non crea nulla e ti invita ad accedere con la tua password.
+
+> Sui server di prova la registrazione è attiva; in produzione resta spenta finché non ci sarà la verifica dell'email.
+
+### Configurazione guidata
+
+La procedura si apre da sola finché l'organizzazione non ha nessun locale, e si riapre quando vuoi dalla scheda **Configurazione guidata** (solo titolare). Ogni passaggio si può **saltare** e riprendere più tardi: la procedura riparte dal punto in cui l'avevi lasciata e mostra con ✓ i passaggi già fatti.
+
+1. **Locali.** Aggiungi uno o più locali: *Permanente* per il bar dell'oratorio aperto tutto l'anno, *Evento* per una festa o una sagra. Tieni separati il bar di tutti i giorni e le feste, così incassi e magazzino restano distinti. Il **cambio giornata** (di solito 04:00) decide a quale giorno contano le vendite dopo mezzanotte; il fuso orario resta `Europe/Rome`.
+2. **Listino (facoltativo).** Per ogni locale puoi creare un listino di esempio: reparti *Bar* e *Cucina* e alcune categorie e prodotti (acqua, bibita, caffè, panino, patatine, toast, torta, gelato). Il magazzino è spento sui prodotti di esempio. Cambia nomi e prezzi o elimina ciò che non serve da **Categorie** e **Prodotti**.
+3. **Casse.** Scegli quante casse registrare per ogni locale e premi **Genera N codici**. Su ogni PC o tablet di cassa apri l'indirizzo `/enrol` mostrato a schermo, inserisci un codice e un nome (es. «Cassa 1»). I codici valgono **10 minuti** e una volta sola: se scadono generane altri qui o in **Dispositivi**. Se stampi gli scontrini sulla stampante USB della cassa, genera anche il codice per l'**agente di stampa** e segui la [guida di installazione](print-agent-setup.md).
+4. **Persone.** Aggiungi cassieri, gestori e magazzinieri, ognuno con il suo locale e un **PIN** di 4–6 cifre (obbligatorio per i cassieri). Ai gestori puoi dare anche email e password per entrare nell'area gestione da computer. Puoi impostare anche **il tuo PIN**, per usare le casse o approvare gli storni.
+5. **Riepilogo.** Per ogni locale: listino, casse e agenti registrati, persone. Seguono le cose da fare: registrare le casse, far entrare i cassieri con il PIN, collegare la stampante, personalizzare lo scontrino in **Locali**.
+
+Tutto quello che fa la procedura si può fare e modificare anche dalle pagine normali descritte qui sotto.
 
 ## Preparare il locale
 

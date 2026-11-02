@@ -28,7 +28,25 @@
     "password": "Password",
     "submit": "Accedi",
     "enrolLink": "Registra questo dispositivo come cassa",
-    "pinLink": "Accesso cassieri con PIN"
+    "pinLink": "Accesso cassieri con PIN",
+    "signupLink": "Crea la tua associazione"
+  },
+  "signup": {
+    "title": "Crea la tua associazione",
+    "intro": "Registra la tua associazione, il tuo oratorio o il comitato della festa: diventi il titolare e configuri locali, casse e cassieri con la procedura guidata. StandPOS è gratuito per gli enti senza scopo di lucro fino a 2.000 vendite al mese.",
+    "organisationName": "Nome dell'associazione, dell'oratorio o del comitato",
+    "ownerName": "Il tuo nome e cognome",
+    "email": "La tua email (per accedere)",
+    "password": "Password (almeno 10 caratteri)",
+    "confirmPassword": "Ripeti la password",
+    "declarations": "Dichiarazioni",
+    "nonProfit": "Dichiaro che l'organizzazione è un ente senza scopo di lucro (associazione, parrocchia o oratorio, comitato) e che userà StandPOS per le proprie attività.",
+    "nonFiscal": "Prendo atto che StandPOS emette solo scontrini di cortesia, non fiscali. Dichiaro che per le vendite fatte con StandPOS l'organizzazione non è tenuta a emettere documenti fiscali e che resta l'unica responsabile dei propri obblighi fiscali: un bar aperto tutto l'anno è spesso un'attività commerciale, quindi nel dubbio chiederemo al nostro commercialista.",
+    "submit": "Crea l'associazione",
+    "passwordMismatch": "Le due password non coincidono.",
+    "refused": "Non è stato possibile creare l'organizzazione con questi dati. Se questa email ha già un account StandPOS, accedi con la tua password.",
+    "unavailable": "La registrazione non è attiva su questo server. Chiedi al gestore della piattaforma di creare la tua organizzazione.",
+    "loginLink": "Hai già un account? Accedi"
   },
   "enrol": {
     "title": "Registra dispositivo",
@@ -210,7 +228,125 @@
       "counts": "Inventari",
       "suppliers": "Fornitori",
       "locks": "Blocchi",
-      "day": "Ordini e turni"
+      "day": "Ordini e turni",
+      "setup": "Configurazione guidata"
+    },
+    "startSetup": "Avvia la configurazione guidata"
+  },
+  "setup": {
+    "title": "Configurazione guidata",
+    "intro": "Pochi passaggi per partire: locali, listino, casse e persone. Ogni passaggio si può saltare e riprendere più tardi da «Configurazione guidata».",
+    "steps": {
+      "venues": "Locali",
+      "catalog": "Listino",
+      "registers": "Casse",
+      "staff": "Persone",
+      "summary": "Riepilogo"
+    },
+    "next": "Avanti",
+    "skip": "Salta questo passaggio",
+    "finish": "Vai all'area gestione",
+    "needVenue": "Aggiungi prima un locale (passaggio «Locali»).",
+    "venues": {
+      "title": "Dove vendi?",
+      "intro": "Un locale è un punto vendita con il suo magazzino e i suoi incassi: il bar dell'oratorio aperto tutto l'anno, la festa di settembre. Tenerli separati tiene distinti incassi e magazzino nei resoconti.",
+      "first": "Il primo locale",
+      "another": "Aggiungi un altro locale",
+      "name": "Nome del locale (es. «Bar oratorio», «Festa patronale 2027»)",
+      "kindHints": {
+        "PERMANENT": "Aperto tutto l'anno, per esempio il bar dell'oratorio.",
+        "EVENT": "Pochi giorni, per esempio una festa o una sagra."
+      },
+      "dayChangeHint": "Le vendite tra mezzanotte e il cambio giornata contano per il giorno prima: utile per le serate che finiscono tardi.",
+      "dayChangeAt": "cambio giornata alle {{time}}",
+      "add": "Aggiungi il locale"
+    },
+    "catalog": {
+      "title": "Un listino per partire (facoltativo)",
+      "intro": "Puoi creare un listino di esempio e poi cambiarne nomi e prezzi, oppure saltare e inserire i tuoi prodotti da Categorie e Prodotti.",
+      "preview": "Cosa contiene",
+      "routes": "Reparti «Bar» e «Cucina», per le comande separate; queste categorie e prodotti:",
+      "editLater": "Il magazzino è spento sui prodotti di esempio: lo attivi su ogni prodotto che vuoi contare. Modifica o elimina tutto dalle pagine Categorie e Prodotti.",
+      "create": "Crea il listino di esempio per «{{venue}}»",
+      "creating": "Creazione in corso…",
+      "hasCatalog": "Il listino c'è già: {{categories}} categorie e {{products}} prodotti."
+    },
+    "registers": {
+      "title": "Registra le casse",
+      "open": "Su ogni computer o tablet che farà da cassa apri",
+      "typeCode": "Inserisci uno dei codici qui sotto e dai un nome alla cassa (per esempio «Cassa 1»).",
+      "expiry": "I codici valgono 10 minuti e si usano una volta sola: se scadono, generane di nuovi qui o in Dispositivi.",
+      "pin": "Poi i cassieri entrano sulla cassa toccando il proprio nome e digitando il PIN.",
+      "enrolled_one": "{{count}} cassa già registrata.",
+      "enrolled_other": "{{count}} casse già registrate.",
+      "howMany": "Quante casse vuoi registrare adesso?",
+      "fewer": "Una cassa in meno",
+      "more": "Una cassa in più",
+      "generate_one": "Genera {{count}} codice",
+      "generate_other": "Genera {{count}} codici",
+      "codesFor": "Codici per {{venue}}",
+      "registerName": "Cassa {{n}}",
+      "validUntil": "valido fino alle {{time}}",
+      "agentIntro_one": "Per stampare gli scontrini sulla stampante USB della cassa serve l'agente di stampa, installato su quel PC ({{count}} già registrato).",
+      "agentIntro_other": "Per stampare gli scontrini sulla stampante USB della cassa serve l'agente di stampa, installato su quel PC ({{count}} già registrati).",
+      "agentGenerate": "Genera il codice per l'agente di stampa",
+      "agentGuide": "Guida all'installazione dell'agente di stampa"
+    },
+    "staff": {
+      "title": "Cassieri e gestori",
+      "intro": "Aggiungi chi lavorerà alle casse e chi ti aiuta a gestire. Ognuno ha un PIN di 4–6 cifre per entrare sulle casse registrate.",
+      "add": "Aggiungi una persona",
+      "roleHints": {
+        "CASHIER": "Vende, incassa, apre e chiude il proprio turno.",
+        "MANAGER": "Listino, prezzi, magazzino, storni e resoconti di questo locale.",
+        "STOCK_CLERK": "Carichi, inventari e rettifiche di magazzino."
+      },
+      "managerLogin": "Facoltativo: email e password per entrare nell'area gestione da un computer. Si possono aggiungere anche dopo.",
+      "passwordNeeded": "Per l'accesso con email serve una password di almeno 10 caratteri.",
+      "submit": "Aggiungi",
+      "nobody": "Ancora nessuno.",
+      "ownPin": "Il tuo PIN",
+      "ownPinHint": "Per usare anche tu le casse o approvare gli storni, imposta un tuo PIN.",
+      "ownPinSet": "Hai già un PIN: puoi cambiarlo qui."
+    },
+    "summary": {
+      "title": "Riepilogo",
+      "catalog": "Listino: {{categories}} categorie, {{products}} prodotti",
+      "registers_one": "{{count}} cassa registrata",
+      "registers_other": "{{count}} casse registrate",
+      "agents_one": "{{count}} agente di stampa",
+      "agents_other": "{{count}} agenti di stampa",
+      "staff_one": "{{count}} persona con un ruolo nel locale",
+      "staff_other": "{{count}} persone con un ruolo nel locale",
+      "next": "Cosa fare adesso",
+      "nextEnrol": "Registra ogni cassa con i codici generati (li trovi anche in Dispositivi) aprendo",
+      "nextPin": "Sulla cassa registrata i cassieri entrano da «Accesso cassieri con PIN».",
+      "nextPrinter": "Installa l'agente di stampa sul PC della cassa e collega la stampante nella pagina Stampanti.",
+      "nextReceipt": "Personalizza intestazione e piè di pagina dello scontrino nella pagina Locali.",
+      "nextCatalog": "Controlla prezzi e prodotti; per contare la merce attiva «Gestione magazzino» sui prodotti e registra i carichi.",
+      "nextFiscal": "Ricorda: gli scontrini sono solo di cortesia. Per gli obblighi fiscali dell'organizzazione fai riferimento al tuo commercialista.",
+      "guide": "Leggi la guida del gestore"
+    },
+    "starter": {
+      "routes": {
+        "bar": "Bar",
+        "kitchen": "Cucina"
+      },
+      "categories": {
+        "drinks": "Bevande",
+        "food": "Piatti e panini",
+        "sweets": "Dolci"
+      },
+      "products": {
+        "water": "Acqua naturale",
+        "softDrink": "Bibita in lattina",
+        "coffee": "Caffè",
+        "sandwich": "Panino con salamella",
+        "fries": "Patatine fritte",
+        "toast": "Toast",
+        "cake": "Fetta di torta",
+        "iceCream": "Gelato"
+      }
     }
   },
   "usage": {
@@ -221,7 +357,10 @@
   "venues": {
     "title": "Locali",
     "kind": "Tipo",
-    "kinds": { "PERMANENT": "Permanente", "EVENT": "Evento" },
+    "kinds": {
+      "PERMANENT": "Permanente",
+      "EVENT": "Evento"
+    },
     "timeZone": "Fuso orario",
     "dayChangeTime": "Cambio giornata",
     "receiptHeader": "Intestazione scontrino",
@@ -262,7 +401,11 @@
   "devices": {
     "title": "Dispositivi",
     "kind": "Tipo",
-    "kinds": { "REGISTER": "Cassa", "KITCHEN": "Schermo cucina", "PRINT_AGENT": "Agente di stampa" },
+    "kinds": {
+      "REGISTER": "Cassa",
+      "KITCHEN": "Schermo cucina",
+      "PRINT_AGENT": "Agente di stampa"
+    },
     "generate": "Genera codice di registrazione",
     "code": "Codice: {{code}}",
     "expires": "Scade alle {{time}}. Inseriscilo sul dispositivo da registrare, alla pagina «Registra dispositivo».",
@@ -388,7 +531,10 @@
     "lineSummary": "{{quantity}} {{name}}",
     "totalCost": "Costo totale",
     "status": "Stato",
-    "statuses": { "DRAFT": "Bozza", "POSTED": "Registrato" }
+    "statuses": {
+      "DRAFT": "Bozza",
+      "POSTED": "Registrato"
+    }
   },
   "counts": {
     "title": "Inventari",
@@ -423,8 +569,12 @@
     "not_found": "Elemento non trovato.",
     "conflict": "L'operazione è in conflitto con dati esistenti (nome già usato?).",
     "validation": "Controlla i campi evidenziati.",
-    "request": { "invalid": "Richiesta non valida." },
-    "csrf": { "invalid": "Sessione non valida: ricarica la pagina." },
+    "request": {
+      "invalid": "Richiesta non valida."
+    },
+    "csrf": {
+      "invalid": "Sessione non valida: ricarica la pagina."
+    },
     "invalidPrice": "Prezzo non valido: usa il formato 4,50.",
     "auth": {
       "invalid_credentials": "Email o password errate.",
@@ -448,7 +598,9 @@
       "last_owner": "Deve restare almeno un titolare.",
       "invalid_role": "Ruolo non valido per il locale scelto."
     },
-    "venue": { "invalid_time_zone": "Fuso orario sconosciuto." },
+    "venue": {
+      "invalid_time_zone": "Fuso orario sconosciuto."
+    },
     "catalog": {
       "route_in_use": "Il reparto è usato da categorie o prodotti.",
       "category_not_empty": "La categoria contiene ancora prodotti.",
@@ -497,6 +649,9 @@
       "printer_in_use": "La stampante è collegata a una cassa o ha già stampato: disattivala invece di eliminarla.",
       "invalid_width": "Larghezza carta non valida.",
       "invalid_agent": "Scegli un agente di stampa registrato in questo locale."
+    },
+    "signup": {
+      "rate_limited": "Troppe registrazioni da questa rete: riprova tra un'ora."
     }
   }
 }

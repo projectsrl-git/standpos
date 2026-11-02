@@ -5,11 +5,13 @@ import { api } from '../api/client';
 import type { Me } from '../api/types';
 import { ErrorBanner } from '../components/ErrorBanner';
 import { useSession } from '../session/SessionContext';
+import { useSignupAvailable } from '../session/signup';
 
 export function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { refresh } = useSession();
+  const signupAvailable = useSignupAvailable();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<unknown>(null);
@@ -61,6 +63,7 @@ export function LoginPage() {
         <nav className="links">
           <Link to="/pin">{t('login.pinLink')}</Link>
           <Link to="/enrol">{t('login.enrolLink')}</Link>
+          {signupAvailable && <Link to="/signup">{t('login.signupLink')}</Link>}
         </nav>
       </form>
     </main>
