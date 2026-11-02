@@ -50,6 +50,7 @@ Adding a dependency outside this list needs a one-line justification in the PR d
 ## Conventions
 
 - **Language:** code, identifiers, comments, commits and docs in English. UI text in Italian through i18n keys; no hard-coded user-facing strings in components.
+- **Talking to the user:** always reply and ask questions in Italian (chat messages, summaries, questions and choices), whatever the language of the code and docs.
 - **Java packages:** `it.projectsrl.standpos.<feature>`, package by feature (`tenant`, `venue`, `auth`, `device`, `catalog`, `stock`, `sales`, `payment`, `sumup`, `printing`, `usage`, `audit`, `report`).
 - **IDs:** UUID (v7) generated in the application.
 - **Time:** `timestamptz` in UTC in the database; each venue has a time zone (default `Europe/Rome`) and a day-change time.

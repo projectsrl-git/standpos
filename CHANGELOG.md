@@ -5,6 +5,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Added
+
+- Print agent: a printer named `text:<path>` writes a readable plain-text preview of each job to that file (same layout as the paper, Unicode kept, `[cut]` and `[drawer]` markers), for demos without a receipt printer.
+
+### Changed
+
+- `CLAUDE.md`: replies and questions to the user in Italian.
+
 ## [0.2.0] - 2026-10-26
 
 Phase 1 — Register and stock.

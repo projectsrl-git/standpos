@@ -49,7 +49,8 @@ public final class Main {
               version               Print the agent version
 
             Every command accepts --home <dir> (default %%ProgramData%%\\StandPOS\\PrintAgent, or STANDPOS_AGENT_HOME).
-            A printer name starting with file: writes the ESC/POS bytes to that file.
+            A printer name starting with file: writes the ESC/POS bytes to that file;
+            text: writes a readable plain-text preview of each job (for demos without a printer).
             """;
 
     private Main() {}

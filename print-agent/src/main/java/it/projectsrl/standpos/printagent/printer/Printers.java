@@ -1,6 +1,7 @@
 package it.projectsrl.standpos.printagent.printer;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -21,7 +22,7 @@ import javax.print.attribute.standard.PrinterIsAcceptingJobs;
 /**
  * Sends raw bytes to a printer of the Windows spooler, found by its exact name (case-insensitive, as Windows compares
  * printer names). A name starting with {@code file:} appends the bytes to that file instead, for tests and for
- * checking the output without hardware.
+ * checking the output without hardware; {@code text:} appends a readable plain-text preview of each job, for demos.
  *
  * <p>The bytes go through {@link DocPrintJob#print} directly rather than escpos-coffee's {@code PrinterOutputStream}:
  * that stream prints on a background thread and only logs failures, while the agent needs the error synchronously to
@@ -30,6 +31,9 @@ import javax.print.attribute.standard.PrinterIsAcceptingJobs;
 public final class Printers {
 
     public static final String FILE_PREFIX = "file:";
+
+    /** Writes a readable plain-text preview instead of ESC/POS: for demos without a receipt printer. */
+    public static final String TEXT_PREFIX = "text:";
 
     private static final String JOB_NAME = "StandPOS";
 
@@ -73,6 +77,15 @@ public final class Printers {
         } catch (PrintException e) {
             throw new PrintFailedException("spooler error: " + e.getMessage(), e);
         }
+    }
+
+    public static boolean isText(String printerName) {
+        return printerName.startsWith(TEXT_PREFIX);
+    }
+
+    /** Appends a text preview (UTF-8) to the file named after {@code text:}. */
+    public static void sendText(String printerName, String text) {
+        writeFile(Path.of(printerName.substring(TEXT_PREFIX.length())), text.getBytes(StandardCharsets.UTF_8));
     }
 
     static Optional<PrintService> find(String name) {

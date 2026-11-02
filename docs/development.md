@@ -58,7 +58,7 @@ docs/              SPEC.md, ADRs, guides, phase prompts
    java -jar print-agent/target/print-agent-0.2.0.jar run
    ```
 
-   In **Stampanti** add a printer on that agent with the Windows name `file:/tmp/standpos-agent/paper.bin`, link it to the register and press **Stampa di prova**: the ESC/POS bytes land in that file. Plain `http://` is accepted only for `localhost` and `.test` hosts. The Windows packaging is in [print-agent-setup.md](print-agent-setup.md).
+   In **Stampanti** add a printer on that agent with the Windows name `file:/tmp/standpos-agent/paper.bin`, link it to the register and press **Stampa di prova**: the ESC/POS bytes land in that file. With `text:/tmp/standpos-agent/receipts.txt` instead, the agent writes a readable plain-text preview of each job, handy for demos ([print-agent-setup.md](print-agent-setup.md#demo-without-a-receipt-printer)). Plain `http://` is accepted only for `localhost` and `.test` hosts. The Windows packaging is in [print-agent-setup.md](print-agent-setup.md).
 
 The Vite dev server proxies `/api` and the WebSocket endpoint `/ws`; the `dev` profile allows its origin (`standpos.websocket.allowed-origins`).
 

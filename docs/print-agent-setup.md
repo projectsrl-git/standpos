@@ -73,6 +73,40 @@ The sample shows the € sign, `à è é ì ò ù`, bold, double width and heigh
 
 Then print a test receipt from StandPOS (a sale or "Ristampa" on an order) and run the [POS80 checklist](pos80-checklist.md).
 
+## Demo without a receipt printer
+
+For a demo, or to try StandPOS before the POS80 is installed, give the printer a name starting with `text:` instead of a Windows printer name, in **Stampanti**:
+
+```
+text:C:\StandPOS\scontrini.txt
+```
+
+The agent then appends every job to that file as readable text, laid out exactly as on paper (same columns, wrapping and alignment; double-width lines are spread out, `N .   4 2`), with the € sign and accented letters as they are, and a header line per job with its kind, id and time:
+
+```
+== RECEIPT 01a17738-dedb-72b3-9895-c3b75ad33182 2026-10-26T07:59:38Z
+[drawer]
+                  Bar oratorio
+------------------------------------------------
+                     ORDINE
+                    N .   1
+26/10/2026 08:59                         Cassa 1
+------------------------------------------------
+Lasagne                                    21,00
+  3 x 7,00
+------------------------------------------------
+TOTALE                                   € 21,00
+Contanti                                 € 30,00
+Resto                                     € 9,00
+
+ Scontrino di cortesia – documento non fiscale
+[cut]
+```
+
+`[cut]` and `[drawer]` mark where the paper would be cut and the cash drawer opened. Open the file in Notepad (or follow it live with `Get-Content C:\StandPOS\scontrini.txt -Wait -Encoding UTF8` in PowerShell) next to the register during the demo. Everything else behaves as with a real printer: the job is acknowledged as printed, the order list shows "Stampato", "Ristampa" adds another copy. `test-print --printer text:C:\StandPOS\prova.txt` works the same way without the server.
+
+The service runs as LocalSystem: choose a folder it can write to and the demo user can read, such as `C:\StandPOS`, not a user's profile. A `file:` printer, by contrast, writes the raw ESC/POS bytes, useful to inspect the commands themselves.
+
 ## Where things are
 
 | What | Where |
