@@ -30,16 +30,18 @@ Su ogni cassa può esserci un solo turno aperto. Se è aperto il turno di un alt
 
 ### Contanti
 
-- Scrivi quanto ti dà il cliente, oppure tocca un importo rapido (**Importo esatto**, 10 €, 20 €…).
-- La cassa mostra il **resto** in grande.
+- Tocca le **monete e banconote** che ti dà il cliente (0,50 €, 1 €, 2 €, 5 €, 10 €, 20 €, 50 €): ogni tocco **si somma**. Esempio: il cliente dà una banconota da 10 € e una moneta da 2 € → tocca **10** e poi **2**, il ricevuto diventa 12,00 €.
+- **Azzera** riparte da zero se hai sbagliato; **Importo esatto** mette il totale preciso. Puoi anche scrivere l'importo a mano. Se non tocchi niente, vale l'importo esatto.
+- La cassa mostra il **resto** in grande e lo ricalcola a ogni tocco.
 - **Conferma e stampa**: si apre il cassetto, esce lo scontrino con il **numero d'ordine** in grande. Consegna lo scontrino al cliente: lo mostrerà al bar o in cucina.
 - **Senza scontrino**: la vendita è registrata e il cassetto si apre, ma non esce nulla. Lo scontrino si può stampare dopo (vedi «Ordini»).
+- **Cassa senza stampante**: il pulsante diventa **Conferma e mostra scontrino** e lo scontrino compare **sullo schermo**, uguale a quello di carta (numero d'ordine in grande): giralo verso il cliente perché veda il numero.
 
 ### Carta (manuale)
 
 Usala quando il cliente paga con il terminale della carta separato. Fai prima passare la carta sul terminale, poi tocca **Conferma e stampa** (o **Senza scontrino**). Il pagamento viene segnato «da riconciliare» per il tesoriere.
 
-Dopo ogni vendita compare **«Ordine N. …»** con il resto: è il numero stampato sullo scontrino. Il numero riparte da 1 ogni giorno, all'ora di cambio giornata del locale.
+Dopo ogni vendita compare **«Ordine N. …»** con il resto: è il numero stampato sullo scontrino. Con **Vedi scontrino** lo rivedi sullo schermo. Il numero riparte da 1 ogni giorno, all'ora di cambio giornata del locale.
 
 ### Se la rete va giù
 
@@ -49,6 +51,7 @@ Se compare la fascia rossa **«Connessione al server assente»**, la vendita non
 
 Tocca **Ordini** in alto: vedi gli ordini di oggi con lo stato dello scontrino.
 
+- **Vedi scontrino**: mostra sullo schermo lo scontrino di quell'ordine, esattamente come viene stampato (anche per gli ordini senza scontrino o stornati).
 - **Ristampa**: stampa di nuovo lo scontrino (es. carta finita a metà). La copia porta la scritta «RISTAMPA».
 - **Stampa scontrino**: per una vendita fatta «senza scontrino».
 - **Storna**: annulla un ordine pagato (prodotto sbagliato, cliente che rinuncia). Serve un **gestore**:
@@ -63,7 +66,7 @@ Tocca **Ordini** in alto: vedi gli ordini di oggi con lo stato dello scontrino.
 | --- | --- |
 | **Stampante offline** | Gli scontrini restano in coda e si stampano quando la stampante torna. Controlla che il PC della cassa sia acceso e che la stampante sia collegata e accesa. |
 | **Stampa non riuscita** | Controlla carta e coperchio della stampante, poi tocca **Ristampa** nell'avviso. |
-| **Nessuna stampante collegata** | Avvisa un gestore: deve collegare la stampante alla cassa (pagina **Stampanti**). Intanto puoi vendere senza scontrino. |
+| **Nessuna stampante collegata** | Avvisa un gestore: deve collegare la stampante alla cassa (pagina **Stampanti**). Intanto puoi vendere: lo scontrino compare sullo schermo. |
 | **Limite mensile raggiunto** (fascia gialla) | Si può vendere fino al cambio giornata indicato. Avvisa il responsabile. |
 | **Vendite bloccate** (fascia rossa) | Le nuove vendite sono bloccate fino al mese prossimo: avvisa il responsabile. |
 
