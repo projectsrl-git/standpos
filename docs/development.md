@@ -77,7 +77,8 @@ cd frontend && npm run lint && npm test && npm run build
   - `DayOverviewIT`: the manager's day overview (orders, shifts overlapping the business day, totals per cashier, default day by the venue's day change, who may see it) and the on-screen receipt preview from the register and the manager area;
   - `StockIT`: goods receipts, counts, adjustments, roles, and the ledger property test (movements always add up to the levels);
   - `UnlockIT`, `AgentEnrolmentIT`;
-  - `RealtimeIT`: a running server (random port) with STOMP clients: job delivery to the agent, acknowledgements, live stock events, refused subscriptions, revocation.
+  - `RealtimeIT`: a running server (random port) with STOMP clients: job delivery to the agent, acknowledgements, live stock events, refused subscriptions, revocation;
+  - `SignupIT` and `SignupDisabledIT`: self-service sign-up (tenant, owner and session, declarations in the audit log, the same answer for a registered email, validation, per-address rate limit, CSRF, isolation of the new tenant) and the switch turned off. Each test signs up from its own client address so the limit never spills over.
 - Tests that need a fixed time set the application clock: `IntegrationTest` exposes a `MutableClock` (`clock.set(Instant)`), reset after each test.
 - The print agent's own tests (ESC/POS bytes, STOMP codec, SQLite queue, a fake server end to end) run in `print-agent` with no printer and no network.
 
@@ -97,7 +98,7 @@ Drop and recreate the database (and the three `standpos_*` roles) before each ru
 
 ## Seeding and bootstrap
 
-There is no self-service sign-up yet (Phase 4). The first tenant, venue and owner come from `STANDPOS_BOOTSTRAP_*` environment variables:
+Self-service sign-up (`/signup`, [ADR 0015](adr/0015-self-service-sign-up.md)) is on in the `dev` and `demo` profiles and off elsewhere unless `STANDPOS_SIGNUP_ENABLED=true`; it creates a tenant with no venue, and the owner lands in the setup wizard (`/manager/setup`). The first tenant, venue and owner can also come from `STANDPOS_BOOTSTRAP_*` environment variables:
 
 - `dev` profile: automatic at startup (`standpos.bootstrap.on-startup=true`).
 - Any other profile: `java -jar standpos-backend.jar --bootstrap` (or `docker compose -f deploy/docker-compose.yml run --rm backend --bootstrap`) creates them and exits. It does nothing if the owner email already exists.
