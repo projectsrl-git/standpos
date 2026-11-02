@@ -12,6 +12,7 @@ import { ManagerHome, ManagerLayout } from './manager/ManagerLayout';
 import { PrintersPage } from './manager/PrintersPage';
 import { ProductsPage } from './manager/ProductsPage';
 import { RoutesPage } from './manager/RoutesPage';
+import { SetupPage } from './manager/setup/SetupWizard';
 import { StockPage } from './manager/StockPage';
 import { SuppliersPage } from './manager/SuppliersPage';
 import { UsersPage } from './manager/UsersPage';
@@ -20,6 +21,7 @@ import { EnrolPage } from './pages/EnrolPage';
 import { LoginPage } from './pages/LoginPage';
 import { PinPage } from './pages/PinPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { SignupPage } from './pages/SignupPage';
 import { useSession } from './session/SessionContext';
 
 function Loading() {
@@ -56,6 +58,7 @@ export function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
       <Route path="/enrol" element={<EnrolPage />} />
       <Route path="/pin" element={<PinPage />} />
       <Route
@@ -88,6 +91,7 @@ export function App() {
         <Route path="suppliers" element={<SuppliersPage />} />
         <Route path="locks" element={<LocksPage />} />
         <Route path="day" element={<DayOverviewPage />} />
+        <Route path="setup" element={<SetupPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
