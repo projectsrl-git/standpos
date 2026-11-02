@@ -1,7 +1,9 @@
 <#
-    Users and memberships (owner only): a cashier and a manager of the venue under test with PINs, and a volunteer
-    of the event venue only. All are test users named "E2E ..."; their PINs are fixed test values, reset on each run.
-    Sets $Ctx.Users (name -> @{ Id; Pin }).
+    Users and memberships (owner only): a cashier and a manager of the venue under test with PINs, a volunteer of
+    the event venue only, and a manager of the event venue who logs in with email and password (to check that a
+    manager does not see another venue). All are test users named "E2E ..."; their PINs are fixed test values, reset
+    on each run, and the event manager's password is a fixed test value set when the user is created.
+    Sets $Ctx.Users (key -> @{ Id; Name; Pin; Email; Password }).
 #>
 param([Parameter(Mandatory)][hashtable]$Ctx)
 $ErrorActionPreference = 'Stop'
@@ -12,6 +14,8 @@ $wanted = @(
     @{ Key = 'Cashier'; Name = 'E2E Cassiere'; Pin = '2468'; Role = 'CASHIER'; VenueId = $Ctx.VenueId }
     @{ Key = 'Manager'; Name = 'E2E Responsabile'; Pin = '1357'; Role = 'MANAGER'; VenueId = $Ctx.VenueId }
     @{ Key = 'Volunteer'; Name = 'E2E Volontario festa'; Pin = '9753'; Role = 'CASHIER'; VenueId = $Ctx.EventVenueId }
+    @{ Key = 'EventManager'; Name = 'E2E Responsabile festa'; Pin = '8642'; Role = 'MANAGER'; VenueId = $Ctx.EventVenueId
+        Email = 'e2e-responsabile-festa@standpos.test'; Password = 'E2E-test-festa-2026' }
 )
 
 foreach ($w in $wanted) {
@@ -19,9 +23,9 @@ foreach ($w in $wanted) {
         $users = @((Invoke-Api -Client $owner -Path '/api/v1/users' -Expect 200).Body)
         $user = Find-ByName $users $w.Name -Property 'displayName'
         if ($null -eq $user) {
-            $user = (Invoke-Api -Client $owner -Method POST -Path '/api/v1/users' -Expect 201 -Body @{
-                    displayName = $w.Name; pin = $w.Pin; venueId = $w.VenueId; role = $w.Role
-                }).Body
+            $body = @{ displayName = $w.Name; pin = $w.Pin; venueId = $w.VenueId; role = $w.Role }
+            if ($w.ContainsKey('Email')) { $body.email = $w.Email; $body.password = $w.Password }
+            $user = (Invoke-Api -Client $owner -Method POST -Path '/api/v1/users' -Expect 201 -Body $body).Body
             Write-Info "created $($w.Name)"
         }
         else {
@@ -37,9 +41,9 @@ foreach ($w in $wanted) {
             }
         }
         Assert-True ([bool]$user.hasPin) 'hasPin'
-        Assert-True (-not [bool]$user.hasPassword) 'PIN-only user has no password'
+        Assert-Equal ([string]$w.ContainsKey('Email')) ([string][bool]$user.hasPassword) 'password only for the email user'
         Assert-True (@($user.memberships | Where-Object { $_.role -eq $w.Role -and $_.venueId -eq $w.VenueId }).Count -eq 1) 'membership'
-        $Ctx.Users[$w.Key] = @{ Id = $user.id; Name = $w.Name; Pin = $w.Pin }
+        $Ctx.Users[$w.Key] = @{ Id = $user.id; Name = $w.Name; Pin = $w.Pin; Email = $w['Email']; Password = $w['Password'] }
     }
 }
 

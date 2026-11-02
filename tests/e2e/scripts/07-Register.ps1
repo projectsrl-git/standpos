@@ -1,7 +1,9 @@
 <#
-    The register: PIN login, shift open and close, cash and card sales, idempotent retry, "senza scontrino",
-    reprint, sold-out, void approved by a manager PIN, and the demo sales of data\demo-data.json.
-    Sets $Ctx.UsageBefore and $Ctx.SalesCreated (orders created in this run, retries excluded).
+    The register: PIN login, shift open and close, cash and card sales paid with notes and coins, idempotent retry,
+    "senza scontrino", reprint, sold-out, void approved by a manager PIN, the server-built receipt preview, the demo
+    sales of data\demo-data.json, and a second register without a printer.
+    Sets $Ctx.UsageBefore, $Ctx.OverviewBefore, $Ctx.SalesCreated (orders created in this run, retries excluded),
+    $Ctx.RunOrders (their latest state), $Ctx.VoidedOrderId, $Ctx.ClosedShifts and $Ctx.Register2.
 #>
 param([Parameter(Mandatory)][hashtable]$Ctx)
 $ErrorActionPreference = 'Stop'
@@ -9,8 +11,9 @@ $ErrorActionPreference = 'Stop'
 $owner = $Ctx.OwnerClient
 $register = $Ctx.Register
 $base = "/api/v1/venues/$($Ctx.VenueId)"
-$S = @{ Orders = @() }
+$S = @{ Orders = New-Object System.Collections.ArrayList }
 $Ctx.SalesCreated = 0
+$Ctx.ClosedShifts = @()
 
 function Get-OnHand([string]$ProductName) {
     $id = $Ctx.Products[$ProductName].id
@@ -21,7 +24,9 @@ function Get-OnHand([string]$ProductName) {
 
 function New-Sale {
     <# Posts an order; counts it when the backend answers 201. Returns the response. #>
-    param([object[]]$Lines, [string]$Method = 'CASH', $Tendered, [bool]$Print = $true, [string]$ClientId = (New-ClientUuid))
+    param([object[]]$Lines, [string]$Method = 'CASH', $Tendered, [long[]]$Pieces, [bool]$Print = $true,
+        [string]$ClientId = (New-ClientUuid), $Client = $register)
+    if ($Pieces) { $Tendered = Get-TenderCents $Pieces }
     $body = @{
         clientOrderId = $ClientId
         lines         = @($Lines | ForEach-Object {
@@ -33,10 +38,10 @@ function New-Sale {
         tenderedCents = $Tendered
         printReceipt  = $Print
     }
-    $r = Invoke-Api -Client $register -Method POST -Path '/api/v1/orders' -Body $body
+    $r = Invoke-Api -Client $Client -Method POST -Path '/api/v1/orders' -Body $body
     if ($r.Status -eq 201) {
         $Ctx.SalesCreated++
-        $S.Orders += $r.Body
+        [void]$S.Orders.Add($r.Body)
     }
     return $r
 }
@@ -47,9 +52,17 @@ function Get-Total([object[]]$Lines) {
     return $total
 }
 
-Test-Step 'Usage baseline read by the owner' {
+function Set-OrderState($Order) {
+    <# Replaces the run's copy of an order by its latest state (after a void). #>
+    for ($k = 0; $k -lt $S.Orders.Count; $k++) {
+        if ($S.Orders[$k].id -eq $Order.id) { $S.Orders[$k] = $Order }
+    }
+}
+
+Test-Step 'Baselines read by the owner: usage and the day overview' {
     $Ctx.UsageBefore = (Invoke-Api -Client $owner -Path '/api/v1/usage' -Expect 200).Body
-    Write-Info "sales this month before the run: $($Ctx.UsageBefore.sales) of $($Ctx.UsageBefore.cap)"
+    $Ctx.OverviewBefore = (Invoke-Api -Client $owner -Path "$base/day-overview" -Expect 200).Body
+    Write-Info "sales this month before the run: $($Ctx.UsageBefore.sales) of $($Ctx.UsageBefore.cap); today $($Ctx.OverviewBefore.totals.paidOrders) paid orders"
 }
 
 Test-Step 'Register lists the users who can log in with a PIN here' {
@@ -77,15 +90,16 @@ Test-Step 'Cashier logs in with the PIN on the register' {
     Assert-Equal $Ctx.RegisterId $r.Body.device.id 'device'
 }
 
-Test-Step 'Cashier cannot use the manager area (403 access_denied)' {
+Test-Step 'Cashier cannot use the manager area (403 access_denied), day overview included' {
     Assert-Problem (Invoke-Api -Client $register -Path "$base/products") 403 'access_denied'
     Assert-Problem (Invoke-Api -Client $register -Path '/api/v1/usage') 403 'access_denied'
+    Assert-Problem (Invoke-Api -Client $register -Path "$base/day-overview") 403 'access_denied'
 }
 
 Test-Step 'No shift yet: GET shift is 204 and selling answers 409 shift.not_open' {
     $r = Invoke-Api -Client $register -Path '/api/v1/register/shift'
     Assert-Status $r 204
-    $sale = New-Sale -Lines @(@{ product = 'Ghiacciolo'; quantity = 1 }) -Tendered 100
+    $sale = New-Sale -Lines @(@{ product = 'Ghiacciolo'; quantity = 1 }) -Pieces @(100)
     Assert-Problem $sale 409 'shift.not_open'
 }
 
@@ -118,12 +132,12 @@ Test-Step 'Register grid groups the active products by category with stock for t
     Assert-True ($null -eq $beer.onHand) 'untracked beer has no stock count'
 }
 
-Test-Step 'Cash sale with receipt: total, change, line snapshots, stock goes down' {
+Test-Step 'Cash sale with receipt paid 10 + 5 + 5 EUR: total, change, line snapshots, stock goes down' {
     $cokeBefore = Get-OnHand 'Coca-Cola lattina'
     $lines = @(@{ product = 'Coca-Cola lattina'; quantity = 2 }, @{ product = 'Panino con salamella'; quantity = 1 })
     $total = Get-Total $lines
     $S.FirstClientId = New-ClientUuid
-    $r = New-Sale -Lines $lines -Tendered 2000 -ClientId $S.FirstClientId
+    $r = New-Sale -Lines $lines -Pieces @(1000, 500, 500) -ClientId $S.FirstClientId
     Assert-Status $r 201
     $o = $r.Body
     Assert-Equal 'PAID' $o.status 'status'
@@ -138,31 +152,38 @@ Test-Step 'Cash sale with receipt: total, change, line snapshots, stock goes dow
     Assert-Equal 'QUEUED' $o.receipt 'receipt queued for the printer'
     Assert-Equal ($cokeBefore - 2) (Get-OnHand 'Coca-Cola lattina') 'coke stock'
     $S.First = $o
-    Write-Info "order #$($o.dailyNumber) of $($o.businessDate): $($o.totalCents) cents"
+    Write-Info "order #$($o.dailyNumber) of $($o.businessDate): $($o.totalCents) cents, change $($o.payment.changeCents)"
 }
 
 Test-Step 'Retry with the same client UUID returns the same order (200), nothing sold twice' {
     $cokeBefore = Get-OnHand 'Coca-Cola lattina'
     $lines = @(@{ product = 'Coca-Cola lattina'; quantity = 2 }, @{ product = 'Panino con salamella'; quantity = 1 })
-    $r = New-Sale -Lines $lines -Tendered 2000 -ClientId $S.FirstClientId
+    $r = New-Sale -Lines $lines -Pieces @(1000, 500, 500) -ClientId $S.FirstClientId
     Assert-Status $r 200
     Assert-Equal $S.First.id $r.Body.id 'same order'
     Assert-Equal $S.First.dailyNumber $r.Body.dailyNumber 'same number'
     Assert-Equal $cokeBefore (Get-OnHand 'Coca-Cola lattina') 'stock unchanged'
 }
 
-Test-Step 'The same client UUID from another register answers 409 sales.client_id_reused' {
+Test-Step 'A second register (no printer) is enrolled; the manager logs in there with the PIN' {
     $code = (Invoke-Api -Client $owner -Method POST -Path "$base/enrolment-codes" -Expect 201 -Body @{ kind = 'REGISTER' }).Body
     $second = New-ApiClient -BaseUrl $Ctx.BaseUrl -Name 'register-2'
     Initialize-Csrf -Client $second | Out-Null
-    Invoke-Api -Client $second -Method POST -Path '/api/v1/devices/enrol' -Expect 201 -Body @{ code = $code.code; name = "E2E Cassa 2 $($Ctx.Stamp)" } | Out-Null
-    Invoke-Api -Client $second -Method POST -Path '/api/v1/auth/pin' -Expect 200 -Body @{ userId = $Ctx.Users.Cashier.Id; pin = $Ctx.Users.Cashier.Pin } | Out-Null
-    $r = Invoke-Api -Client $second -Method POST -Path '/api/v1/orders' -Body @{
+    $enrolled = (Invoke-Api -Client $second -Method POST -Path '/api/v1/devices/enrol' -Expect 201 -Body @{ code = $code.code; name = "E2E Cassa 2 $($Ctx.Stamp)" }).Body
+    $me = (Invoke-Api -Client $second -Method POST -Path '/api/v1/auth/pin' -Expect 200 -Body @{ userId = $Ctx.Users.Manager.Id; pin = $Ctx.Users.Manager.Pin }).Body
+    Assert-Equal 'CASHIER' $me.kind 'a manager sells as a cashier on the register'
+    $status = (Invoke-Api -Client $second -Path '/api/v1/register/status' -Expect 200).Body
+    Assert-True ($null -eq $status.printer) 'no printer on the second register'
+    $Ctx.Register2 = $second
+    $Ctx.Register2Id = $enrolled.device.id
+}
+
+Test-Step 'The same client UUID from another register answers 409 sales.client_id_reused' {
+    $r = Invoke-Api -Client $Ctx.Register2 -Method POST -Path '/api/v1/orders' -Body @{
         clientOrderId = $S.FirstClientId; paymentMethod = 'CASH'; printReceipt = $false
         lines = @(@{ productId = $Ctx.Products['Coca-Cola lattina'].id; quantity = 2 })
     }
     Assert-Problem $r 409 'sales.client_id_reused'
-    Invoke-Api -Client $second -Method POST -Path '/api/v1/auth/logout' -Expect 204 | Out-Null
 }
 
 Test-Step '"Senza scontrino": cash sale without receipt' {
@@ -187,11 +208,12 @@ Test-Step 'Manual card sale with a line note' {
     Assert-Equal 'MANUAL_CARD' $r.Body.payment.method 'method'
     Assert-Equal (Get-Total $lines) $r.Body.payment.amountCents 'amount'
     Assert-Equal 'senza salse' $r.Body.lines[0].note 'note'
+    $S.Card = $r.Body
 }
 
 Test-Step 'Refused sales: SumUp not yet available, tender too low, zero quantity, not enough stock' {
     Assert-Problem (New-Sale -Lines @(@{ product = 'Ghiacciolo'; quantity = 1 }) -Method 'SUMUP_CARD') 400 'sales.method_unavailable'
-    Assert-Problem (New-Sale -Lines @(@{ product = 'Ghiacciolo'; quantity = 2 }) -Tendered 100) 400 'sales.insufficient_tender'
+    Assert-Problem (New-Sale -Lines @(@{ product = 'Ghiacciolo'; quantity = 2 }) -Pieces @(100)) 400 'sales.insufficient_tender'
     Assert-Problem (New-Sale -Lines @(@{ product = 'Ghiacciolo'; quantity = 0 })) 400 'sales.invalid_quantity'
     $onHand = Get-OnHand 'Panino con porchetta'
     if ($onHand -lt 999) {
@@ -209,7 +231,7 @@ Test-Step 'Sold out by hand: the grid shows it and the sale is refused, then it 
         $grid = (Invoke-Api -Client $register -Path '/api/v1/register/catalogue' -Expect 200).Body
         $p = Find-ByName @($grid.categories | ForEach-Object { $_.products }) 'Ghiacciolo'
         Assert-Equal 'True' $p.soldOut 'sold out on the grid'
-        $r = New-Sale -Lines @(@{ product = 'Ghiacciolo'; quantity = 1 }) -Tendered 100
+        $r = New-Sale -Lines @(@{ product = 'Ghiacciolo'; quantity = 1 }) -Pieces @(100)
         Assert-Problem $r 409 'sales.product_unavailable'
         Assert-True (@($r.Problem.productIds) -contains $id) 'problem names the product'
     }
@@ -229,7 +251,7 @@ Test-Step 'Void approvers are the managers of the venue (and owners) with a PIN'
 Test-Step 'Void with a manager PIN: drink back to stock, sandwich to waste' {
     $orangeBefore = Get-OnHand 'Aranciata lattina'
     $sandwichBefore = Get-OnHand 'Panino con salamella'
-    $sale = New-Sale -Lines @(@{ product = 'Aranciata lattina'; quantity = 1 }, @{ product = 'Panino con salamella'; quantity = 1 }) -Tendered 1000
+    $sale = New-Sale -Lines @(@{ product = 'Aranciata lattina'; quantity = 1 }, @{ product = 'Panino con salamella'; quantity = 1 }) -Pieces @(1000)
     Assert-Status $sale 201
     $o = $sale.Body
     $voidLines = @(
@@ -262,17 +284,48 @@ Test-Step 'Void with a manager PIN: drink back to stock, sandwich to waste' {
     Assert-Problem (Invoke-Api -Client $register -Method POST -Path $path -Body @{
             managerId = $Ctx.Users.Manager.Id; pin = $Ctx.Users.Manager.Pin; reason = 'E2E di nuovo'; lines = $voidLines
         }) 409 'sales.not_voidable'
+    Set-OrderState $voided
     $S.Voided = $voided
+    $Ctx.VoidedOrderId = $voided.id
 }
 
-Test-Step 'Demo sales of the day' {
+Test-Step 'Demo sales of the day, cash paid with notes and coins; change in integer cents' {
     foreach ($sale in $Ctx.Data.demoSales) {
-        $tendered = if ($sale.PSObject.Properties.Name -contains 'tenderedCents') { [long]$sale.tenderedCents } else { $null }
-        $r = New-Sale -Lines @($sale.lines) -Method $sale.paymentMethod -Tendered $tendered -Print ([bool]$sale.printReceipt)
+        $pieces = if ($sale.PSObject.Properties.Name -contains 'tenderedPieces') { [long[]]@($sale.tenderedPieces) } else { $null }
+        $r = New-Sale -Lines @($sale.lines) -Method $sale.paymentMethod -Pieces $pieces -Print ([bool]$sale.printReceipt)
         Assert-Status $r 201
-        Assert-Equal (Get-Total @($sale.lines)) $r.Body.totalCents "total of order #$($r.Body.dailyNumber)"
+        $total = Get-Total @($sale.lines)
+        Assert-Equal $total $r.Body.totalCents "total of order #$($r.Body.dailyNumber)"
+        if ($pieces) {
+            $tendered = Get-TenderCents $pieces
+            Assert-Equal $tendered $r.Body.payment.tenderedCents "tendered of order #$($r.Body.dailyNumber)"
+            Assert-Equal ($tendered - $total) $r.Body.payment.changeCents "change of order #$($r.Body.dailyNumber)"
+            Assert-True ($r.Body.payment.changeCents -is [int] -or $r.Body.payment.changeCents -is [long]) 'change is an integer'
+            Write-Info ("#{0}: {1} paid with {2} -> change {3}" -f $r.Body.dailyNumber, (Format-Cents $total),
+                    (($pieces | ForEach-Object { Format-Cents $_ }) -join ' + '), (Format-Cents $r.Body.payment.changeCents))
+        }
     }
-    Write-Info "$($Ctx.Data.demoSales.Count) demo orders"
+}
+
+Test-Step 'Receipt preview from the register: non-fiscal line, order number, amounts, cash and change' {
+    $preview = (Invoke-Api -Client $register -Path "/api/v1/register/orders/$($S.First.id)/receipt-preview" -Expect 200).Body
+    Assert-Equal 48 $preview.columns 'columns of the 80 mm printer'
+    Assert-ReceiptPreview -Preview $preview -Order $S.First
+    $lastCash = @($S.Orders | Where-Object { $_.payment.method -eq 'CASH' -and $null -ne $_.payment.tenderedCents -and $_.status -eq 'PAID' })[-1]
+    Assert-ReceiptPreview -Preview (Invoke-Api -Client $register -Path "/api/v1/register/orders/$($lastCash.id)/receipt-preview" -Expect 200).Body -Order $lastCash
+}
+
+Test-Step 'Receipt preview from the manager area: card payment, and a voided order still has its receipt' {
+    $preview = (Invoke-Api -Client $owner -Path "$base/orders/$($S.Card.id)/receipt-preview" -Expect 200).Body
+    Assert-ReceiptPreview -Preview $preview -Order $S.Card
+    $voided = (Invoke-Api -Client $owner -Path "$base/orders/$($S.Voided.id)/receipt-preview" -Expect 200).Body
+    Assert-ReceiptPreview -Preview $voided -Order $S.Voided
+}
+
+Test-Step 'Receipt preview is not reachable for unknown orders, other venues or from the register with the manager path' {
+    Assert-Problem (Invoke-Api -Client $register -Path "/api/v1/register/orders/$([guid]::NewGuid())/receipt-preview") 404 'not_found'
+    Assert-Problem (Invoke-Api -Client $owner -Path "/api/v1/venues/$($Ctx.EventVenueId)/orders/$($S.First.id)/receipt-preview") 404 'not_found'
+    Assert-Problem (Invoke-Api -Client $register -Path "$base/orders/$($S.First.id)/receipt-preview") 403 'access_denied'
 }
 
 Test-Step "Orders of the day list this run's orders, newest first" {
@@ -285,11 +338,35 @@ Test-Step "Orders of the day list this run's orders, newest first" {
     }
 }
 
+Test-Step 'Register without a printer: a sale "with receipt" shows as no receipt; the preview stands in for it' {
+    $second = $Ctx.Register2
+    Invoke-Api -Client $second -Method POST -Path '/api/v1/register/shift/open' -Expect 201 -Body @{ openingFloatCents = 5000 } | Out-Null
+    $lines = @(@{ product = 'Panino con porchetta'; quantity = 1 }, @{ product = 'Patatine fritte'; quantity = 1 }, @{ product = 'Coca-Cola lattina'; quantity = 1 })
+    $r = New-Sale -Client $second -Lines $lines -Pieces @(1000, 200) -Print $true
+    Assert-Status $r 201
+    $o = $r.Body
+    Assert-Equal (1200 - (Get-Total $lines)) $o.payment.changeCents 'change from 10 + 2 EUR'
+    # Known and accepted: with no printer linked nothing is queued, so the lists show it as "senza scontrino".
+    Assert-True (@('NOT_REQUESTED', 'NO_PRINTER') -contains $o.receipt) "receipt state $($o.receipt)"
+    Assert-Equal 'False' $o.receiptPrinted 'not printed'
+    $listed = @((Invoke-Api -Client $second -Path '/api/v1/register/orders' -Expect 200).Body | Where-Object { $_.id -eq $o.id })
+    Assert-True (@('NOT_REQUESTED', 'NO_PRINTER') -contains $listed[0].receipt) 'same state in the order list'
+    Assert-ReceiptPreview -Preview (Invoke-Api -Client $second -Path "/api/v1/register/orders/$($o.id)/receipt-preview" -Expect 200).Body -Order $o
+    Assert-Problem (Invoke-Api -Client $second -Method POST -Path "/api/v1/register/orders/$($o.id)/receipt") 409 'printing.no_printer'
+
+    $shift = (Invoke-Api -Client $second -Path '/api/v1/register/shift' -Expect 200).Body
+    Assert-Equal (5000 + $o.totalCents) $shift.expectedCashCents 'expected cash on the second register'
+    $closed = (Invoke-Api -Client $second -Method POST -Path '/api/v1/register/shift/close' -Expect 200 -Body @{ countedCashCents = $shift.expectedCashCents }).Body
+    Assert-Equal 0 $closed.differenceCents 'cash matches'
+    $Ctx.ClosedShifts += $closed
+    Invoke-Api -Client $second -Method POST -Path '/api/v1/auth/logout' -Expect 204 | Out-Null
+}
+
 Test-Step 'Shift closes with the counted cash; the difference is reported' {
     $current = (Invoke-Api -Client $register -Path '/api/v1/register/shift' -Expect 200).Body
     $paidCash = 0
     $paidCard = 0
-    $mine = @($S.Orders | Where-Object { $_.id -ne $S.Voided.id })
+    $mine = @($S.Orders | Where-Object { $_.deviceId -eq $Ctx.RegisterId -and $_.status -eq 'PAID' })
     foreach ($o in $mine) {
         if ($o.payment.method -eq 'CASH') { $paidCash += [long]$o.totalCents } else { $paidCard += [long]$o.totalCents }
     }
@@ -304,11 +381,12 @@ Test-Step 'Shift closes with the counted cash; the difference is reported' {
     Assert-NotNull $closed.closedAt 'closedAt'
     Assert-Equal $counted $closed.countedCashCents 'counted'
     Assert-Equal -50 $closed.differenceCents 'difference'
+    $Ctx.ClosedShifts += $closed
     Write-Info "shift closed: $($closed.paidOrders) paid, $($closed.voidedOrders) voided, expected $($closed.expectedCashCents) cents"
 }
 
 Test-Step 'After closing, selling answers 409 shift.not_open and closing again too' {
-    Assert-Problem (New-Sale -Lines @(@{ product = 'Ghiacciolo'; quantity = 1 }) -Tendered 100) 409 'shift.not_open'
+    Assert-Problem (New-Sale -Lines @(@{ product = 'Ghiacciolo'; quantity = 1 }) -Pieces @(100)) 409 'shift.not_open'
     Assert-Problem (Invoke-Api -Client $register -Method POST -Path '/api/v1/register/shift/close' -Body @{ countedCashCents = 0 }) 409 'shift.not_open'
 }
 
@@ -317,4 +395,5 @@ Test-Step 'Cashier logs out; the register stays enrolled' {
     Assert-Problem (Invoke-Api -Client $register -Path '/api/v1/register/shift') 403 'access_denied'
     $current = (Invoke-Api -Client $register -Path '/api/v1/devices/current' -Expect 200).Body
     Assert-Equal 'True' $current.enrolled 'still enrolled'
+    $Ctx.RunOrders = @($S.Orders)
 }

@@ -56,10 +56,14 @@
     }
   ],
   "demoSales": [
-    { "paymentMethod": "CASH", "tenderedCents": 500, "printReceipt": true, "lines": [ { "product": "Caffè", "quantity": 2 }, { "product": "Fetta di torta della nonna", "quantity": 1 } ] },
-    { "paymentMethod": "CASH", "tenderedCents": 2000, "printReceipt": true, "lines": [ { "product": "Panino con porchetta", "quantity": 1 }, { "product": "Patatine fritte", "quantity": 1 }, { "product": "Birra media", "quantity": 1 } ] },
+    { "paymentMethod": "CASH", "tenderedPieces": [500], "printReceipt": true, "lines": [ { "product": "Caffè", "quantity": 2 }, { "product": "Fetta di torta della nonna", "quantity": 1 } ] },
+    { "paymentMethod": "CASH", "tenderedPieces": [1000, 200], "printReceipt": true, "lines": [ { "product": "Panino con porchetta", "quantity": 1 }, { "product": "Patatine fritte", "quantity": 1 }, { "product": "Birra media", "quantity": 1 } ] },
     { "paymentMethod": "MANUAL_CARD", "printReceipt": true, "lines": [ { "product": "Cappuccino", "quantity": 2 }, { "product": "Krapfen alla crema", "quantity": 2 } ] },
     { "paymentMethod": "CASH", "printReceipt": false, "lines": [ { "product": "Ghiacciolo", "quantity": 3 } ] },
-    { "paymentMethod": "CASH", "tenderedCents": 1000, "printReceipt": true, "lines": [ { "product": "Toast prosciutto e formaggio", "quantity": 1, "note": "ben cotto" }, { "product": "Tè freddo alla pesca", "quantity": 1 }, { "product": "Acqua frizzante 0,5 L", "quantity": 1 } ] }
+    { "paymentMethod": "CASH", "tenderedPieces": [1000], "printReceipt": true, "lines": [ { "product": "Toast prosciutto e formaggio", "quantity": 1, "note": "ben cotto" }, { "product": "Tè freddo alla pesca", "quantity": 1 }, { "product": "Acqua frizzante 0,5 L", "quantity": 1 } ] },
+    { "paymentMethod": "CASH", "tenderedPieces": [2000], "printReceipt": true, "lines": [ { "product": "Panino con salamella", "quantity": 2 }, { "product": "Coca-Cola lattina", "quantity": 2 } ] },
+    { "paymentMethod": "CASH", "tenderedPieces": [200, 50, 50], "printReceipt": true, "lines": [ { "product": "Krapfen alla crema", "quantity": 1 }, { "product": "Cappuccino", "quantity": 1 } ] },
+    { "paymentMethod": "CASH", "tenderedPieces": [5000], "printReceipt": true, "lines": [ { "product": "Birra media", "quantity": 2 }, { "product": "Patatine fritte", "quantity": 2 } ] },
+    { "paymentMethod": "CASH", "tenderedPieces": [500, 200], "printReceipt": true, "lines": [ { "product": "Panino con porchetta", "quantity": 1 }, { "product": "Acqua naturale 0,5 L", "quantity": 1 } ] }
   ]
 }

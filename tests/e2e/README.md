@@ -67,29 +67,33 @@ The helper module:
 | --- | --- |
 | `01-Auth` | CSRF cookie and header, 401 when anonymous, login refused without CSRF, validation errors, unknown email and wrong password (a single failure: no lockout) followed by a successful login, `/auth/me`, logout |
 | `02-Venues` | venue list, an event venue created or reused and updated, unknown time zone, validation, 404 |
-| `03-Users` | PIN-only cashier and manager of the venue and a volunteer of the event venue, PIN reset and unlock on re-runs, duplicate membership, role without venue, invalid PIN, the venue's people list |
+| `03-Users` | PIN-only cashier and manager of the venue, a volunteer of the event venue, a manager of the event venue with email and password, PIN reset and unlock on re-runs, duplicate membership, role without venue, invalid PIN, the venue's people list |
 | `04-Catalogue` | routes Bar and Cucina, categories Bibite, Caffetteria, Panini, Dolci with default route, 16 products in integer cents (9 with stock tracking), invalid colour, negative price, category not empty, route in use, deactivate and delete an unused product |
 | `05-Stock` | suppliers, goods receipts (draft, edit, post, stock up by exactly the quantities, total cost), empty and untracked receipts, posted receipt immutable, supplier in use, adjustment, waste, refused movement types and quantities, insufficient stock, stock count (counted, posted, `COUNT` movement), movements, low-stock list |
 | `06-Devices` | enrolment codes, browser enrolment of a register with an HttpOnly `SP_DEVICE` cookie, `/devices/current`, wrong-kind codes on both endpoints (not burnt), used codes, print agent enrolment on `/api/v1/agents/enrol` with a bearer token, rename, printer of the agent (invalid width, invalid agent), register-to-printer link, test page, printer in use |
-| `07-Register` | cashiers list, PIN login (wrong PIN, user of another venue), cashier kept out of the manager area, shift open/close with counted cash and difference, register status and grid, cash sale with change and line snapshots, idempotent retry with the same client UUID (200, nothing sold twice), the same UUID from a second register (409), "senza scontrino" and later receipt, manual card with a line note, refused sales (SumUp, tender, quantity, stock), sold-out by hand, void approved by a manager PIN (wrong PIN, cashier as approver, missing lines, back to stock vs waste, not voidable twice), demo sales, orders of the day |
-| `08-Usage` | the month's sales counter grew by exactly the orders created, owner cannot change the cap, the run's devices are revoked and lose access |
+| `07-Register` | cashiers list, PIN login (wrong PIN, user of another venue), cashier kept out of the manager area (day overview included), shift open/close with counted cash and difference, register status and grid, cash sale with change and line snapshots, idempotent retry with the same client UUID (200, nothing sold twice), the same UUID from a second register (409), "senza scontrino" and later receipt, manual card with a line note, refused sales (SumUp, tender, quantity, stock), sold-out by hand, void approved by a manager PIN (wrong PIN, cashier as approver, missing lines, back to stock vs waste, not voidable twice), demo sales paid with the cash dialog's notes and coins (e.g. 12,00 with 10 + 2) and change in integer cents, receipt preview from the register and the manager area (fixed non-fiscal line, order number, line amounts, total, cash and change or card; voided orders too; 404 for unknown orders or another venue, 403 for a cashier on the manager path), a second register without a printer where a sale "with receipt" lists as not printed (known, accepted behaviour) and the preview stands in for it, orders of the day |
+| `08-DayOverview` | "Ordini e turni" (`/day-overview`): default date is today in the venue's time zone and day change, explicit date, every order of the run with total, payment, status, cashier and register, day totals grown by exactly the run's cash and card sales and agreeing with the order rows, the run's shifts with float, sales, expected and counted cash and difference, totals per cashier adding up their shifts, an empty day, malformed date, 403 for the manager of another venue (who sees their own venue) |
+| `09-Usage` | the month's sales counter grew by exactly the orders created, owner cannot change the cap, the run's devices are revoked and lose access |
 
 **Not covered** (needs other tools or a later phase): the WebSocket/STOMP channel (live stock events, print job
 delivery and acknowledgements by an agent: the queued jobs stay `QUEUED` because no agent of the suite connects),
 the usage cap reaching 80%/100% (needs a platform admin or 2,000 sales), account and PIN lockout after repeated
-failures (it would lock the demo owner for 15 minutes), SumUp card payments (Phase 2), the PWA user interface.
-The backend's own integration tests (`./mvnw -B verify`) cover these at a lower level.
+failures (it would lock the demo owner for 15 minutes), SumUp card payments (Phase 2), the PWA user interface
+(the cash dialog's note and coin buttons themselves: through the API a cash payment is still `tenderedCents`),
+orders of another tenant (the suite has one tenant's credentials; `RlsIsolationIT` covers it). The backend's own
+integration tests (`./mvnw -B verify`) cover these at a lower level.
 
 ## Data and re-runs
 
 Re-running is safe: routes, categories, products, suppliers, users, the event venue and the printer are looked up
-by name and reused. Every run adds two posted goods receipts, an adjustment, a waste and a stock count, and 9 orders
-(one of them voided), which count towards the tenant's monthly cap of 2,000 sales.
+by name and reused. Every run adds two posted goods receipts, an adjustment, a waste and a stock count, two shifts
+and 14 orders (one of them voided), which count towards the tenant's monthly cap of 2,000 sales.
 
-Test-only entities are marked with **E2E**: users `E2E Cassiere` (PIN 2468), `E2E Responsabile` (PIN 1357) and
-`E2E Volontario festa` (PIN 9753), the venue `E2E Festa dell'oratorio`, the devices `E2E Cassa ...` and
-`E2E Agente ...`, the printer `E2E Stampante`, goods receipts `E2E-DDT-...` and reasons and notes starting with
-`E2E`. The PINs are fixed test values, reset at the start of every run. The demo catalogue itself (Bar, Cucina,
+Test-only entities are marked with **E2E**: users `E2E Cassiere`, `E2E Responsabile`, `E2E Volontario festa` and
+`E2E Responsabile festa` (the only one with an email, `e2e-responsabile-festa@standpos.test`), the venue
+`E2E Festa dell'oratorio`, the devices `E2E Cassa ...`, `E2E Cassa 2 ...` and `E2E Agente ...`, the printer
+`E2E Stampante`, goods receipts `E2E-DDT-...` and reasons and notes starting with `E2E`. Their PINs and the event
+manager's password are fixed test values in `scripts/03-Users.ps1`; PINs are reset at the start of every run. The demo catalogue itself (Bar, Cucina,
 Bibite, "Panino con salamella", ...) has no prefix: it is meant to stay as demo data.
 
 At the start of a run, draft goods receipts and stock counts left by an interrupted run and still-active `E2E`

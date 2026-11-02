@@ -30,6 +30,7 @@ Test-Step "The run's devices are revoked and lose access" {
         }
     }
     Assert-Equal 'False' (Invoke-Api -Client $Ctx.Register -Path '/api/v1/devices/current' -Expect 200).Body.enrolled 'register no longer enrolled'
+    Assert-Equal 'False' (Invoke-Api -Client $Ctx.Register2 -Path '/api/v1/devices/current' -Expect 200).Body.enrolled 'second register no longer enrolled'
     Assert-Equal 'False' (Invoke-Api -Client $Ctx.Agent -Path '/api/v1/devices/current' -Expect 200).Body.enrolled 'agent no longer enrolled'
     $r = Invoke-Api -Client $Ctx.Register -Method POST -Path '/api/v1/auth/pin' -Body @{ userId = $Ctx.Users.Cashier.Id; pin = $Ctx.Users.Cashier.Pin }
     Assert-True (@(401, 403) -contains $r.Status) "PIN login on a revoked register refused (got $($r.Status))"

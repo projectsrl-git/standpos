@@ -283,6 +283,104 @@ function Get-Today {
     return (Get-Date).ToString('yyyy-MM-dd')
 }
 
+function Get-BusinessDate {
+    <#
+    .SYNOPSIS
+        Today's business date of a venue: the local date in its time zone, minus one day before the day change.
+        Returns $null for a time zone this PC cannot map (only the IANA zones in the table below are known).
+    #>
+    param([Parameter(Mandatory)][string]$TimeZone, [Parameter(Mandatory)][string]$DayChangeTime)
+    $windowsIds = @{
+        'Europe/Rome' = 'W. Europe Standard Time'; 'Europe/Vatican' = 'W. Europe Standard Time'
+        'Europe/San_Marino' = 'W. Europe Standard Time'; 'Europe/Berlin' = 'W. Europe Standard Time'
+        'Europe/Zurich' = 'W. Europe Standard Time'; 'Europe/Paris' = 'Romance Standard Time'
+        'Europe/London' = 'GMT Standard Time'; 'UTC' = 'UTC'
+    }
+    if (-not $windowsIds.ContainsKey($TimeZone)) { return $null }
+    $zone = [TimeZoneInfo]::FindSystemTimeZoneById($windowsIds[$TimeZone])
+    $local = [TimeZoneInfo]::ConvertTimeFromUtc([DateTime]::UtcNow, $zone)
+    $change = [TimeSpan]::Parse($DayChangeTime)
+    $day = $local.Date
+    if ($local.TimeOfDay -lt $change) { $day = $day.AddDays(-1) }
+    return $day.ToString('yyyy-MM-dd')
+}
+
+# ---------------------------------------------------------------------------------------------------------------
+# Money and receipts
+# ---------------------------------------------------------------------------------------------------------------
+
+# Kept as char codes: the scripts stay ASCII so that PowerShell 5.1 reads them without a byte order mark.
+$script:Euro = [string][char]0x20AC
+$script:NonFiscalNotice = 'Scontrino di cortesia ' + [char]0x2013 + ' documento non fiscale'
+
+# Notes and coins the register's cash dialog offers, in cents.
+$script:Denominations = @(50, 100, 200, 500, 1000, 2000, 5000)
+
+function Format-Cents {
+    <# Cents as the receipt prints them (backend Money.format): 1234567 -> "12.345,67". #>
+    param([Parameter(Mandatory)][long]$Cents)
+    $sign = if ($Cents -lt 0) { '-' } else { '' }
+    $abs = [Math]::Abs($Cents)
+    $euros = [string][long](($abs - ($abs % 100)) / 100)
+    $grouped = ''
+    for ($i = 0; $i -lt $euros.Length; $i++) {
+        if ($i -gt 0 -and (($euros.Length - $i) % 3) -eq 0) { $grouped += '.' }
+        $grouped += $euros[$i]
+    }
+    return '{0}{1},{2:D2}' -f $sign, $grouped, [int]($abs % 100)
+}
+
+function Format-Euro {
+    <# As on the TOTALE line: "<euro sign> 9,00". #>
+    param([Parameter(Mandatory)][long]$Cents)
+    return $script:Euro + ' ' + (Format-Cents $Cents)
+}
+
+function Get-TenderCents {
+    <# The amount handed over as notes and coins (cents), each of them one the cash dialog offers. #>
+    param([Parameter(Mandatory)][long[]]$Pieces)
+    $sum = 0
+    foreach ($p in $Pieces) {
+        if ($script:Denominations -notcontains $p) { throw "Not a denomination of the cash dialog: $p cents" }
+        $sum += $p
+    }
+    return [long]$sum
+}
+
+function Assert-ReceiptPreview {
+    <#
+    .SYNOPSIS
+        The server-built receipt preview matches the order: the fixed non-fiscal line, the order number, every line
+        with its amount, the total, and cash tendered and change (or card).
+    #>
+    param([Parameter(Mandatory)]$Preview, [Parameter(Mandatory)]$Order)
+    Assert-True ($Preview.columns -ge 32) "preview width $($Preview.columns) columns"
+    $texts = @($Preview.lines | ForEach-Object { [string]$_.text })
+    $trimmed = @($texts | ForEach-Object { $_.Trim() })
+    $wide = @($Preview.lines | Where-Object { $_.text.Length -gt $Preview.columns })
+    Assert-True ($wide.Count -eq 0) 'no line wider than the paper'
+    Assert-True ($trimmed -contains $script:NonFiscalNotice) 'fixed non-fiscal line'
+    Assert-True ($trimmed -contains "N. $($Order.dailyNumber)") "order number N. $($Order.dailyNumber)"
+
+    function Find-Row([string]$Left, [string]$Right) {
+        return @($texts | Where-Object { $_.StartsWith($Left) -and $_.TrimEnd().EndsWith($Right) }).Count -gt 0
+    }
+    foreach ($line in $Order.lines) {
+        $name = if ($line.name.Length -gt 20) { $line.name.Substring(0, 20) } else { $line.name }
+        Assert-True (Find-Row $name (Format-Cents $line.lineTotalCents)) "row of '$($line.name)' with $(Format-Cents $line.lineTotalCents)"
+    }
+    Assert-True (Find-Row 'TOTALE' (Format-Euro $Order.totalCents)) "TOTALE $(Format-Cents $Order.totalCents)"
+    if ($Order.payment.method -eq 'CASH') {
+        $tendered = if ($null -ne $Order.payment.tenderedCents) { [long]$Order.payment.tenderedCents } else { [long]$Order.totalCents }
+        $change = if ($null -ne $Order.payment.changeCents) { [long]$Order.payment.changeCents } else { 0 }
+        Assert-True (Find-Row 'Contanti' (Format-Euro $tendered)) "Contanti $(Format-Cents $tendered)"
+        Assert-True (Find-Row 'Resto' (Format-Euro $change)) "Resto $(Format-Cents $change)"
+    }
+    else {
+        Assert-True (Find-Row 'Carta' (Format-Euro $Order.totalCents)) 'Carta row'
+    }
+}
+
 # ---------------------------------------------------------------------------------------------------------------
 # Assertions and results
 # ---------------------------------------------------------------------------------------------------------------
@@ -322,7 +420,8 @@ function Assert-Problem {
     if ($actual -ne $Code) {
         throw "Assertion failed: $($Response.Method) $($Response.Path) expected problem code '$Code', got '$actual'$(Format-Problem $Response.Problem)"
     }
-    foreach ($field in 'type', 'title', 'status') {
+    # 'type' may be absent: RFC 9457 reads it as "about:blank" (Spring's own errors, e.g. a malformed parameter).
+    foreach ($field in 'title', 'status') {
         if ($Response.Problem.PSObject.Properties.Name -notcontains $field) {
             throw "Assertion failed: problem detail of $($Response.Path) has no '$field'"
         }
@@ -373,5 +472,6 @@ function Get-TestResults {
 }
 
 Export-ModuleMember -Function Read-EnvFile, Get-RunStamp, New-ApiClient, Get-ClientCookie, Invoke-Api, Format-Problem,
-    Initialize-Csrf, Invoke-Login, Connect-Owner, Find-ByName, New-ClientUuid, Get-Today, Assert-True, Assert-Equal, Assert-NotNull,
+    Initialize-Csrf, Invoke-Login, Connect-Owner, Find-ByName, New-ClientUuid, Get-Today, Get-BusinessDate,
+    Format-Cents, Format-Euro, Get-TenderCents, Assert-ReceiptPreview, Assert-True, Assert-Equal, Assert-NotNull,
     Assert-Status, Assert-Problem, Start-TestScript, Test-Step, Write-Info, Get-TestResults
