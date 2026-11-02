@@ -243,9 +243,13 @@ public class OrderService {
     @Transactional(readOnly = true)
     public List<OrderView> orders(RegisterSession session, LocalDate date) {
         Venue venue = venues.findById(session.venueId()).orElseThrow(() -> ApiException.notFound("Venue"));
-        LocalDate day = date != null ? date : venue.businessDay().dateOf(clock.instant());
-        List<CustomerOrder> list = orders.findAllByVenueIdAndBusinessDateOrderByDailyNumberDesc(venue.getId(), day);
-        return views(list);
+        return orders(venue, date != null ? date : venue.businessDay().dateOf(clock.instant()));
+    }
+
+    /** A venue's orders of a business day, newest first, with their payment and receipt state. */
+    @Transactional(readOnly = true)
+    public List<OrderView> orders(Venue venue, LocalDate day) {
+        return views(orders.findAllByVenueIdAndBusinessDateOrderByDailyNumberDesc(venue.getId(), day));
     }
 
     /** Prints (again) an order's receipt on this register's printer: "Ristampa", or later for "Senza scontrino". */
@@ -422,7 +426,7 @@ public class OrderService {
                 .max(Comparator.comparing(PrintJobEntity::getCreatedAt));
     }
 
-    private static ReceiptBuilder.Receipt receipt(Venue venue, String registerName, CustomerOrder order,
+    static ReceiptBuilder.Receipt receipt(Venue venue, String registerName, CustomerOrder order,
             List<OrderLine> lines, Payment payment, boolean kickDrawer, boolean reprint) {
         return new ReceiptBuilder.Receipt(venue.getName(), venue.getReceiptHeader(), venue.getReceiptFooter(),
                 ZoneId.of(venue.getTimeZone()), order.getDailyNumber(),
