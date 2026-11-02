@@ -7,6 +7,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Added
 
+- End-to-end suite in Windows PowerShell 5.1 (`tests/e2e`): one command (`Run-All.ps1 -Target local|cloud`) drives a running instance through the REST API across auth, venues, users, catalogue, stock, devices, register sales, voids and usage, with a pass/fail summary and exit code, and leaves a re-runnable oratorio demo catalogue and sales behind.
 - Print agent: a printer named `text:<path>` writes a readable plain-text preview of each job to that file (same layout as the paper, Unicode kept, `[cut]` and `[drawer]` markers), for demos without a receipt printer.
 
 ### Changed
