@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router';
 import { ApiError, api } from '../api/client';
 import type { GridProduct, Order, PaymentMethod, RegisterGrid, RegisterStatus } from '../api/types';
 import { ErrorBanner } from '../components/ErrorBanner';
+import { ReceiptPreviewDialog } from '../components/ReceiptPreviewDialog';
 import { formatCents } from '../money';
 import {
   addProduct,
@@ -51,6 +52,7 @@ export function RegisterPage() {
   const [lastOrder, setLastOrder] = useState<Order | null>(null);
   const [printFailure, setPrintFailure] = useState<{ orderId: string; error: string | null } | null>(null);
   const [showOrders, setShowOrders] = useState(false);
+  const [showingReceipt, setShowingReceipt] = useState<Order | null>(null);
   const [closingShift, setClosingShift] = useState(false);
   const [noteFor, setNoteFor] = useState<string | null>(null);
   const [error, setError] = useState<unknown>(null);
@@ -133,6 +135,8 @@ export function RegisterPage() {
         printReceipt,
       });
       setLastOrder(order);
+      // No printer on this register: the receipt the customer asked for appears on screen instead.
+      if (printReceipt && !status?.printer) setShowingReceipt(order);
       setCart([]);
       setClientOrderId(null);
       setPaying(null);
@@ -285,6 +289,9 @@ export function RegisterPage() {
                     {t('payment.change', { amount: formatCents(lastOrder.payment.changeCents) })}
                   </span>
                 ) : null}
+                <button type="button" className="btn btn-small" onClick={() => setShowingReceipt(lastOrder)}>
+                  {t('orders.showReceipt')}
+                </button>
               </div>
             )}
             {cart.length === 0 && !lastOrder && <p className="muted">{t('register.emptyCart')}</p>}
@@ -375,6 +382,7 @@ export function RegisterPage() {
         <PaymentDialog
           method={paying}
           totalCents={total}
+          hasPrinter={Boolean(status?.printer)}
           busy={busy}
           error={payError}
           onConfirm={(c) => void checkout(c)}
@@ -382,6 +390,13 @@ export function RegisterPage() {
         />
       )}
       {showOrders && <OrdersPanel onClose={() => setShowOrders(false)} />}
+      {showingReceipt && (
+        <ReceiptPreviewDialog
+          path={`/register/orders/${showingReceipt.id}/receipt-preview`}
+          number={showingReceipt.dailyNumber}
+          onClose={() => setShowingReceipt(null)}
+        />
+      )}
       {closingShift && shift && (
         <CloseShiftDialog
           shift={shift}

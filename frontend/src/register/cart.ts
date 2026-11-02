@@ -72,11 +72,14 @@ export function changeFor(totalCents: number, tenderedCents: number): number | n
   return tenderedCents >= totalCents ? tenderedCents - totalCents : null;
 }
 
-/** Quick amounts for cash: exact, then the next round notes above the total. */
-export function quickTenders(totalCents: number): number[] {
-  const notes = [500, 1000, 2000, 5000, 10000];
-  const above = notes.filter((n) => n > totalCents).slice(0, 3);
-  return [totalCents, ...above];
+/** The coins and notes a cashier receives, in cents: each tap adds one to the amount tendered. */
+export const CASH_DENOMINATIONS = [50, 100, 200, 500, 1000, 2000, 5000] as const;
+
+export type Denomination = (typeof CASH_DENOMINATIONS)[number];
+
+/** The amount tendered after one more coin or note; "nothing yet" (null) counts as zero, not as the exact total. */
+export function addTender(tenderedCents: number | null, denominationCents: number): number {
+  return (tenderedCents ?? 0) + denominationCents;
 }
 
 /** The order lines as the API expects them. */

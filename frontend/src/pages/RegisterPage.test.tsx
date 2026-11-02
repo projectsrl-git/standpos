@@ -211,4 +211,98 @@ describe('RegisterPage', () => {
     await userEvent.click(await screen.findByRole('button', { name: /Panino/ }));
     expect(screen.getByRole('button', { name: 'Contanti' })).toBeDisabled();
   });
+
+  it('adds up the coins and notes tapped, with "Azzera" and the exact amount', async () => {
+    const sent: { tenderedCents: number }[] = [];
+    mockFetch({
+      'GET /api/v1/auth/me': me,
+      'GET /api/v1/register/catalogue': () => ({ body: grid }),
+      'GET /api/v1/register/status': () => ({ body: status() }),
+      'POST /api/v1/orders': (init) => {
+        const body = JSON.parse(String(init?.body)) as { clientOrderId: string; tenderedCents: number };
+        sent.push(body);
+        return { status: 201, body: order(body.clientOrderId) };
+      },
+    });
+    renderRegister();
+
+    await userEvent.click(await screen.findByRole('button', { name: /Panino/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Acqua/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Contanti' }));
+    const dialog = screen.getByRole('dialog');
+    const coins = within(dialog).getByRole('group', { name: /Monete e banconote/ });
+    expect(
+      within(coins)
+        .getAllByRole('button')
+        .map((b) => b.getAttribute('aria-label')),
+    ).toEqual(['50 centesimi', '1 euro', '2 euro', '5 euro', '10 euro', '20 euro', '50 euro']);
+    const tendered = within(dialog).getByLabelText('Ricevuto (€)');
+
+    await userEvent.click(within(coins).getByRole('button', { name: '10 euro' }));
+    await userEvent.click(within(coins).getByRole('button', { name: '2 euro' }));
+    expect(tendered).toHaveValue('12,00');
+    expect(within(dialog).getByRole('status')).toHaveTextContent(/Resto: 6,50\s€/);
+    await userEvent.click(within(coins).getByRole('button', { name: '50 centesimi' }));
+    expect(tendered).toHaveValue('12,50');
+    expect(within(dialog).getByRole('status')).toHaveTextContent(/Resto: 7,00\s€/);
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Azzera' }));
+    expect(tendered).toHaveValue('');
+    await userEvent.click(within(coins).getByRole('button', { name: '5 euro' }));
+    expect(within(dialog).getByRole('status')).toHaveTextContent('non copre il totale');
+    expect(within(dialog).getByRole('button', { name: 'Conferma e stampa' })).toBeDisabled();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Importo esatto' }));
+    expect(tendered).toHaveValue('5,50');
+    await userEvent.click(within(coins).getByRole('button', { name: '20 euro' }));
+    expect(tendered).toHaveValue('25,50');
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Conferma e stampa' }));
+    expect(await screen.findByText('Ordine N. 7')).toBeInTheDocument();
+    expect(sent.map((s) => s.tenderedCents)).toEqual([2550]);
+  });
+
+  it('shows the receipt on screen when the register has no printer, and on demand from the orders', async () => {
+    const preview = {
+      columns: 48,
+      lines: [
+        { text: '                 Bar oratorio', bold: true, size: 'DOUBLE_HEIGHT' },
+        { text: '          N. 7', bold: true, size: 'DOUBLE' },
+        { text: 'Panino' + ' '.repeat(38) + '4,50', bold: false, size: 'NORMAL' },
+        { text: '  Scontrino di cortesia – documento non fiscale', bold: false, size: 'NORMAL' },
+      ],
+    };
+    mockFetch({
+      'GET /api/v1/auth/me': me,
+      'GET /api/v1/register/catalogue': () => ({ body: grid }),
+      'GET /api/v1/register/status': () => ({ body: status({ printer: null }) }),
+      'POST /api/v1/orders': (init) => ({
+        status: 201,
+        body: order((JSON.parse(String(init?.body)) as { clientOrderId: string }).clientOrderId),
+      }),
+      'GET /api/v1/register/orders/o1/receipt-preview': () => ({ body: preview }),
+      'GET /api/v1/register/orders': () => ({ body: [order('c1')] }),
+    });
+    renderRegister();
+
+    expect(await screen.findByText(/lo scontrino compare sullo schermo/)).toBeInTheDocument();
+    await userEvent.click(await screen.findByRole('button', { name: /Panino/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Contanti' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Conferma e mostra scontrino' }));
+
+    const receipt = await screen.findByRole('dialog', { name: 'Scontrino N. 7' });
+    const paper = within(receipt).getByRole('figure', { name: /Anteprima dello scontrino/ });
+    expect(paper).toHaveTextContent('Scontrino di cortesia – documento non fiscale');
+    expect(within(paper).getByText('N. 7', { exact: false }).parentElement).toHaveClass(
+      'receipt-double',
+      'receipt-bold',
+    );
+    expect(paper).toHaveStyle({ '--receipt-columns': '48' });
+    await userEvent.click(within(receipt).getByRole('button', { name: 'Chiudi' }));
+    expect(screen.queryByRole('dialog', { name: 'Scontrino N. 7' })).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Ordini' }));
+    const orders = await screen.findByRole('dialog', { name: 'Ordini di oggi' });
+    await userEvent.click(await within(orders).findByRole('button', { name: 'Vedi scontrino' }));
+    expect(await screen.findByRole('dialog', { name: 'Scontrino N. 7' })).toHaveTextContent('Panino');
+  });
 });

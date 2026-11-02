@@ -3,7 +3,8 @@ import {
   addProduct,
   cartTotal,
   changeFor,
-  quickTenders,
+  addTender,
+  CASH_DENOMINATIONS,
   setNote,
   setQuantity,
   toOrderLines,
@@ -45,7 +46,9 @@ describe('cart', () => {
     expect(changeFor(1020, 2000)).toBe(980);
     expect(changeFor(1020, 1000)).toBeNull();
     expect(changeFor(450, 450)).toBe(0);
-    expect(quickTenders(1020)).toEqual([1020, 2000, 5000, 10000]);
-    expect(quickTenders(300)).toEqual([300, 500, 1000, 2000]);
+    expect(CASH_DENOMINATIONS).toEqual([50, 100, 200, 500, 1000, 2000, 5000]);
+    // Taps add up in integer cents: 10 € + 2 € + 0,50 € = 12,50 €.
+    expect([1000, 200, 50].reduce<number | null>((sum, c) => addTender(sum, c), null)).toBe(1250);
+    expect(addTender(null, 50)).toBe(50);
   });
 });
