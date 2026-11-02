@@ -85,7 +85,7 @@ cd frontend && npm run lint && npm test && npm run build
 ### End-to-end suite against a running instance
 
 `tests/e2e` holds a Windows PowerShell 5.1 suite that drives a running StandPOS through its REST API (owner login,
-catalogue, stock, devices, register sales, voids, usage) and leaves a demo catalogue and a few sales behind:
+catalogue, stock, devices, register sales, voids, receipt previews, day overview, usage, self-service sign-up) and leaves a demo catalogue and a few sales behind:
 
 ```powershell
 .\tests\e2e\Run-All.ps1 -Target local                                   # local demo, http://127.0.0.1:8088
