@@ -70,7 +70,7 @@
     "capBlocked": "Limite mensile di vendite raggiunto: le nuove vendite sono bloccate fino al prossimo mese.",
     "capReached": "Limite mensile di vendite raggiunto: si può vendere fino al cambio giornata ({{time}}).",
     "printerOffline": "Stampante offline ({{name}}): gli scontrini restano in coda e si stampano quando torna.",
-    "noPrinter": "Nessuna stampante collegata a questa cassa: le vendite non stampano lo scontrino.",
+    "noPrinter": "Nessuna stampante collegata a questa cassa: lo scontrino compare sullo schermo dopo la conferma.",
     "printFailed": "Stampa non riuscita {{error}}. Controlla carta e stampante, poi ristampa."
   },
   "shift": {
@@ -97,11 +97,16 @@
     "cardTitle": "Pagamento con carta (manuale)",
     "total": "Totale",
     "exact": "Importo esatto",
+    "reset": "Azzera",
+    "denominations": "Monete e banconote ricevute: ogni tocco si somma",
+    "coinCents": "{{amount}} centesimi",
+    "euro": "{{amount}} euro",
     "tendered": "Ricevuto (€)",
     "notEnough": "L'importo ricevuto non copre il totale.",
     "change": "Resto: {{amount}}",
     "manualCardHint": "Usa il terminale della carta separato, poi conferma: il pagamento viene segnato da riconciliare.",
     "confirm": "Conferma e stampa",
+    "confirmShow": "Conferma e mostra scontrino",
     "noReceipt": "Senza scontrino",
     "methods": {
       "CASH": "Contanti",
@@ -124,7 +129,56 @@
       "SENT": "In stampa",
       "PRINTED": "Stampato",
       "FAILED": "Stampa non riuscita"
-    }
+    },
+    "showReceipt": "Vedi scontrino"
+  },
+  "receiptPreview": {
+    "title": "Scontrino N. {{number}}",
+    "paper": "Anteprima dello scontrino come viene stampato",
+    "voided": "Ordine stornato: lo scontrino non vale più.",
+    "loading": "Caricamento dello scontrino…"
+  },
+  "dayOverview": {
+    "title": "Ordini e turni",
+    "intro": "Gli ordini e i turni di cassa di una giornata del locale (la giornata cambia all'ora di cambio giornata del locale). Solo consultazione: il resoconto stampato del turno e le esportazioni arrivano più avanti.",
+    "date": "Giornata",
+    "today": "Oggi",
+    "totals": "Totali della giornata",
+    "paidOrders": "Ordini pagati",
+    "voidedOrders": "Ordini stornati",
+    "cash": "Contanti",
+    "card": "Carte",
+    "total": "Totale",
+    "orders": "Ordini",
+    "noOrders": "Nessun ordine in questa giornata.",
+    "number": "N.",
+    "time": "Ora",
+    "cashier": "Cassiere",
+    "register": "Cassa",
+    "payment": "Pagamento",
+    "state": "Stato",
+    "receipt": "Scontrino",
+    "status": {
+      "AWAITING_PAYMENT": "In attesa di pagamento",
+      "PAID": "Pagato",
+      "CANCELLED": "Annullato",
+      "VOIDED": "Stornato"
+    },
+    "shifts": "Turni",
+    "noShifts": "Nessun turno aperto in questa giornata.",
+    "openedAt": "Aperto",
+    "closedAt": "Chiuso",
+    "stillOpen": "Ancora aperto",
+    "float": "Fondo cassa",
+    "cashSales": "Incasso contanti",
+    "manualCard": "Carte (manuale)",
+    "expected": "Contanti attesi",
+    "counted": "Contanti contati",
+    "difference": "Differenza",
+    "byCashier": "Totali per cassiere",
+    "shiftCount": "Turni",
+    "shiftsNote": "I turni ancora aperti o iniziati in un'altra giornata riportano le cifre dell'intero turno.",
+    "unknown": "—"
   },
   "void": {
     "title": "Storno dell'ordine N. {{number}}",
@@ -155,7 +209,8 @@
       "receipts": "Carichi",
       "counts": "Inventari",
       "suppliers": "Fornitori",
-      "locks": "Blocchi"
+      "locks": "Blocchi",
+      "day": "Ordini e turni"
     }
   },
   "usage": {

@@ -265,6 +265,7 @@ a {
   display: flex;
   align-items: center;
   padding: 0 16px;
+  white-space: nowrap;
   text-decoration: none;
   color: var(--muted);
   border-bottom: 3px solid transparent;
@@ -684,6 +685,111 @@ a {
 
 .shift-panel {
   text-align: left;
+}
+
+/* Cash: one button per coin and note, drawn in-house (src/register/CashDenominations.tsx). */
+.denominations {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.denomination-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.denomination {
+  min-height: 64px;
+  min-width: var(--touch);
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.denomination:active {
+  transform: scale(0.96);
+  background: #eef2f6;
+}
+
+.denomination-art {
+  display: block;
+}
+
+/* Receipt preview: the paper is as wide as the printer's columns; double sizes keep that width. */
+.receipt-paper {
+  --receipt-columns: 48;
+  margin: 0 auto;
+  padding: 16px 12px;
+  width: calc(var(--receipt-columns) * 1ch + 24px);
+  max-width: 100%;
+  overflow-x: auto;
+  background: #fffef8;
+  color: #111111;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15);
+  font-family: ui-monospace, Consolas, 'Courier New', monospace;
+  font-size: clamp(10px, 2.4vw, 14px);
+  line-height: 1.35;
+}
+
+.receipt-line {
+  white-space: pre;
+}
+
+.receipt-bold {
+  font-weight: 700;
+}
+
+.receipt-double {
+  font-size: 2em;
+  line-height: 1.2;
+}
+
+.receipt-double_height {
+  line-height: 2.7;
+}
+
+.receipt-double_height > span,
+.receipt-double_width > span {
+  display: inline-block;
+  line-height: 1.35;
+}
+
+.receipt-double_height > span {
+  transform: scaleY(2);
+}
+
+.receipt-double_width > span {
+  transform: scaleX(2);
+  transform-origin: left;
+}
+
+.day-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.day-totals {
+  max-width: 360px;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.table .num {
+  text-align: right;
+  white-space: nowrap;
 }
 
 @media (max-width: 900px) {

@@ -5,7 +5,7 @@ Questa guida spiega l'**area gestione** di StandPOS (accesso con email e passwor
 | Ruolo | Pagine |
 | --- | --- |
 | Titolare | tutte, per tutti i locali, più Locali e Utenti |
-| Gestore (di un locale) | Dispositivi, Stampanti, Reparti, Categorie, Prodotti, Magazzino, Carichi, Inventari, Fornitori, Blocchi |
+| Gestore (di un locale) | Ordini e turni, Dispositivi, Stampanti, Reparti, Categorie, Prodotti, Magazzino, Carichi, Inventari, Fornitori, Blocchi |
 | Magazziniere (di un locale) | Magazzino, Carichi, Inventari, Fornitori |
 
 Il locale su cui si lavora si sceglie in alto a destra.
@@ -61,6 +61,18 @@ Pagina **Inventari** → **Nuovo inventario**: la lista contiene tutti i prodott
 2. **Conferma inventario**: per ogni prodotto contato StandPOS registra la differenza rispetto alla giacenza di quel momento. I prodotti lasciati vuoti non cambiano.
 
 Meglio fare l'inventario a cassa chiusa: le vendite fatte nel frattempo vengono comunque considerate.
+
+## Ordini e turni
+
+La pagina **Ordini e turni** (titolare e gestori del locale) riassume una giornata del locale scelto in alto. È solo consultazione: non cambia nulla.
+
+- **Giornata**: all'apertura è oggi, secondo l'ora di **cambio giornata** del locale (con cambio alle 04:00, all'una di notte si vede ancora la giornata di ieri). Scegli un'altra data dal calendario; **Oggi** torna alla giornata corrente. Gli orari sono quelli del locale.
+- **Totali della giornata**: ordini pagati e stornati, incasso in contanti, carte e totale (gli ordini stornati non contano, perché i soldi sono stati restituiti).
+- **Ordini**: numero, ora, cassiere, cassa, pagamento, totale, stato (pagato o stornato, con il motivo dello storno) e scontrino (stampato, in coda, non riuscito, senza scontrino). **Vedi scontrino** lo mostra sullo schermo esattamente come viene stampato.
+- **Turni**: per ogni turno di cassa aperto in quella giornata, cassa, cassiere, apertura e chiusura (o «Ancora aperto»), fondo cassa, incasso contanti, carte, **contanti attesi**, **contanti contati** alla chiusura e **differenza**. Le cifre sono quelle dell'intero turno: un turno che supera il cambio giornata compare in entrambe le giornate con gli stessi numeri, e un turno dimenticato aperto compare finché qualcuno non lo chiude.
+- **Totali per cassiere**: la somma dei turni di ogni cassiere nella giornata, con la differenza dei turni già chiusi.
+
+Il resoconto stampato di fine turno e le esportazioni CSV ed Excel arriveranno con i report.
 
 ## Storni
 

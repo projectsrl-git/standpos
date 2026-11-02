@@ -4,6 +4,7 @@ import { Navigate, Route, Routes } from 'react-router';
 import type { PrincipalKind } from './api/types';
 import { CategoriesPage } from './manager/CategoriesPage';
 import { CountsPage } from './manager/CountsPage';
+import { DayOverviewPage } from './manager/DayOverviewPage';
 import { DevicesPage } from './manager/DevicesPage';
 import { GoodsReceiptsPage } from './manager/GoodsReceiptsPage';
 import { LocksPage } from './manager/LocksPage';
@@ -86,6 +87,7 @@ export function App() {
         <Route path="counts" element={<CountsPage />} />
         <Route path="suppliers" element={<SuppliersPage />} />
         <Route path="locks" element={<LocksPage />} />
+        <Route path="day" element={<DayOverviewPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
