@@ -41,8 +41,11 @@ class SecurityConfig {
     /** Print agent enrolment: no cookie read or set, so no CSRF (docs/adr/0010-print-agent-enrolment.md). */
     static final String AGENT_ENROL = "/api/v1/agents/enrol";
 
+    /** Self-service sign-up; its controller exists only when sign-up is enabled (docs/adr/0015-self-service-sign-up.md). */
+    static final String SIGNUP = "/api/v1/auth/signup";
+
     static final String[] PUBLIC_API = {
-        "/api/v1/auth/csrf", "/api/v1/auth/login", "/api/v1/auth/logout", "/api/v1/devices/enrol",
+        "/api/v1/auth/csrf", "/api/v1/auth/login", "/api/v1/auth/logout", SIGNUP, "/api/v1/devices/enrol",
         "/api/v1/devices/current", AGENT_ENROL
     };
 

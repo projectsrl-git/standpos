@@ -21,7 +21,12 @@ const manager = () => ({
 });
 
 function renderInManager(page: ReactNode) {
-  const context: ManagerContext = { venueId: 'v1', venues: [], reloadVenues: async () => {} };
+  const context: ManagerContext = {
+    venueId: 'v1',
+    venues: [],
+    venuesLoaded: true,
+    reloadVenues: async () => {},
+  };
   return render(
     <MemoryRouter>
       <SessionProvider>

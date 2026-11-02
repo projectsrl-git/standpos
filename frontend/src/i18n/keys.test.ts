@@ -23,7 +23,9 @@ describe('Italian translations', () => {
     for (const file of sourceFiles(join(process.cwd(), 'src'))) {
       for (const match of readFileSync(file, 'utf8').matchAll(/\bt\('([a-zA-Z0-9_.]+)'/g)) {
         const key = match[1] ?? '';
-        if (typeof lookup(key) !== 'string') missing.push(`${file}: ${key}`);
+        // Plural keys (t('x', { count })) are defined as x_one and x_other.
+        const defined = typeof lookup(key) === 'string' || typeof lookup(`${key}_other`) === 'string';
+        if (!defined) missing.push(`${file}: ${key}`);
       }
     }
     expect(missing).toEqual([]);

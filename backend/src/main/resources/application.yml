@@ -74,6 +74,9 @@ logging:
 standpos:
   security:
     secure-cookies: ${STANDPOS_SECURE_COOKIES:true}
+  signup:
+    # Self-service sign-up (ADR 0015): off by default until email verification exists.
+    enabled: ${STANDPOS_SIGNUP_ENABLED:false}
   bootstrap:
     on-startup: false
     tenant-name: ${STANDPOS_BOOTSTRAP_TENANT_NAME:}

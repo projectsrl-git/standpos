@@ -31,7 +31,7 @@ StandPOS (working title) is a hosted, multi-tenant point of sale for association
 
 The design rests on eight assumptions; if one is wrong, the affected section changes.
 
-- **Non-fiscal only.** Every receipt is a courtesy receipt with the fixed line "Scontrino di cortesia – documento non fiscale", which tenants cannot edit or remove. Each tenant confirms at onboarding that it has no obligation to issue fiscal documents; the platform does not judge this. A parish bar open all year is often a commercial activity, so the onboarding text points tenants to their accountant.
+- **Non-fiscal only.** Every receipt is a courtesy receipt with the fixed line "Scontrino di cortesia – documento non fiscale", which tenants cannot edit or remove. Each tenant confirms at onboarding that it has no obligation to issue fiscal documents; the platform does not judge this. A parish bar open all year is often a commercial activity, so the onboarding text points tenants to their accountant. Self-service sign-up records these declarations, with their version, in the audit log ([ADR 0015](adr/0015-self-service-sign-up.md)).
 - **Internet always available.** Every venue has Wi-Fi or a 4G/5G connection, so the platform does not sell offline. The Solo reader uses Wi-Fi by default; its mobile data must be enabled by SumUp, so it is not relied on.
 - **No SumUp intervention.** Everything a tenant needs (API key, affiliate key, reader pairing) is created self-service in the SumUp dashboard, following SumUp's public documentation. No OAuth restricted scopes, no partner agreement.
 - **Oratorio hardware.** A touchscreen PC with Windows 10 runs the register in a browser; a POS80 thermal printer (80 mm, ESC/POS) is attached by USB. Windows 10 is out of Microsoft support since October 2025: keep that PC isolated on the network.
@@ -304,9 +304,11 @@ flowchart TB
     G1{{"Gate: tested on Virtual Solo, then on a real Solo"}}
     P3["Phase 3 · Tickets and reports<br/>Separate bar and kitchen tickets, shift close, reports, CSV and XLSX exports"]
     G2{{"Gate: pilot at the oratorio"}}
-    P4["Phase 4 · SaaS onboarding<br/>Usage alerts, onboarding wizard for new tenants, refunds by API, kitchen screens if requested"]
+    P4["Phase 4 · SaaS onboarding<br/>Usage alerts, email verification, refunds by API, kitchen screens if requested<br/>(sign-up and setup wizard already delivered)"]
     P0 --> P1 --> P2 --> G1 --> P3 --> G2 --> P4
 ```
+
+Self-service sign-up and the setup wizard were brought forward from Phase 4 on 2 November 2026, behind a configuration switch that stays off in production until email verification exists ([ADR 0015](adr/0015-self-service-sign-up.md)).
 
 Each phase ships with its Markdown documentation updated. Durations are not estimated yet; with offline mode and OAuth out of scope, the main remaining unknown is the print agent on the real POS80.
 
@@ -330,6 +332,7 @@ Ten scope decisions were taken on 22 October 2026 and four more on 26 October 20
 | Session length | 12 hours for managers and cashiers |
 | Lockout | 15 minutes after five failures; owners, and venue managers for PINs, can unlock earlier |
 | Print agent enrolment | Own endpoint, token in the response body, no cookie and therefore no CSRF token |
+| Self-service sign-up (2 November 2026) | Built ahead of Phase 4 with a setup wizard; off unless `STANDPOS_SIGNUP_ENABLED`, on for demos; email verification still pending |
 
 - [ ] Card fallback when SumUp is unreachable: short test on a real Solo (see Connectivity).
 - [ ] Tenant-supplied API keys vs SumUp's OAuth recommendation for platforms: accepted risk, to revisit if SumUp changes its terms.

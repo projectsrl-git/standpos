@@ -2,3 +2,8 @@
 logging:
   level:
     it.projectsrl.standpos: info
+
+standpos:
+  signup:
+    # Visitors create their own organisation (ADR 0015); STANDPOS_SIGNUP_ENABLED=false turns it off.
+    enabled: ${STANDPOS_SIGNUP_ENABLED:true}

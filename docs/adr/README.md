@@ -18,3 +18,4 @@ Short records of decisions the specification left open. Each states the context,
 | [0012](0012-print-job-pipeline.md) | Print job pipeline | 1 |
 | [0013](0013-on-screen-receipt-preview.md) | On-screen receipt preview | 1 |
 | [0014](0014-day-overview.md) | Day overview of orders and shifts for managers | 1 |
+| [0015](0015-self-service-sign-up.md) | Self-service sign-up and setup wizard, before email verification | 4 |

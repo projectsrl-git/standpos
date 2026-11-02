@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Navigate, NavLink, Outlet, useNavigate } from 'react-router';
+import { Link, Navigate, NavLink, Outlet, useMatch, useNavigate } from 'react-router';
 import { api } from '../api/client';
 import type { Usage, Venue } from '../api/types';
 import { ErrorBanner } from '../components/ErrorBanner';
@@ -24,6 +24,7 @@ export function ManagerLayout() {
   const { me, logout } = useSession();
   const [venues, setVenues] = useState<Venue[]>([]);
   const [venueId, setVenueIdState] = useState<string | null>(rememberedVenue);
+  const [venuesLoaded, setVenuesLoaded] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [usage, setUsage] = useState<Usage | null>(null);
 
@@ -38,6 +39,7 @@ export function ManagerLayout() {
 
   const applyVenues = useCallback((list: Venue[]) => {
     setVenues(list);
+    setVenuesLoaded(true);
     setVenueIdState((current) =>
       current && list.some((v) => v.id === current) ? current : (list[0]?.id ?? null),
     );
@@ -58,7 +60,10 @@ export function ManagerLayout() {
         if (active) applyVenues(list);
       },
       (e: unknown) => {
-        if (active) setError(e);
+        if (active) {
+          setError(e);
+          setVenuesLoaded(true);
+        }
       },
     );
     return () => {
@@ -84,7 +89,8 @@ export function ManagerLayout() {
   const owner = isOwner(me);
   const manager = canManageVenue(me, venueId);
   const stock = canManageStock(me, venueId);
-  const context: ManagerContext = { venueId, venues, reloadVenues };
+  const inSetup = useMatch('/manager/setup') !== null;
+  const context: ManagerContext = { venueId, venues, venuesLoaded, reloadVenues };
 
   return (
     <div className="manager">
@@ -125,6 +131,7 @@ export function ManagerLayout() {
         {stock && <NavLink to="/manager/counts">{t('manager.nav.counts')}</NavLink>}
         {stock && <NavLink to="/manager/suppliers">{t('manager.nav.suppliers')}</NavLink>}
         {manager && <NavLink to="/manager/locks">{t('manager.nav.locks')}</NavLink>}
+        {owner && <NavLink to="/manager/setup">{t('manager.nav.setup')}</NavLink>}
       </nav>
       {usage?.capReached && (
         <p className="error banner" role="alert">
@@ -138,17 +145,25 @@ export function ManagerLayout() {
       )}
       <ErrorBanner error={error} />
       <main className="content">
-        {venues.length === 0 && !error ? <p>{t('manager.noVenue')}</p> : null}
+        {venuesLoaded && venues.length === 0 && !error && !inSetup ? (
+          <p>
+            {t('manager.noVenue')} {owner && <Link to="/manager/setup">{t('manager.startSetup')}</Link>}
+          </p>
+        ) : null}
         <Outlet context={context} />
       </main>
     </div>
   );
 }
 
-/** The first page of the manager area: the catalogue for managers, the stock for stock clerks. */
+/**
+ * The first page of the manager area: the setup wizard for an owner whose tenant has no venue yet, otherwise the
+ * catalogue for managers and the stock for stock clerks.
+ */
 export function ManagerHome() {
   const { me } = useSession();
-  const { venueId } = useManager();
+  const { venueId, venues, venuesLoaded } = useManager();
+  if (venuesLoaded && venues.length === 0 && isOwner(me)) return <Navigate to="setup" replace />;
   if (!venueId) return null;
   return <Navigate to={canManageVenue(me, venueId) ? 'products' : 'stock'} replace />;
 }
