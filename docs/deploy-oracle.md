@@ -5,30 +5,36 @@ Step-by-step guide to run the StandPOS demo on an Oracle Cloud Infrastructure (O
 ## 1. Account and home region
 
 1. Sign up at Oracle Cloud. The **home region is chosen once** and cannot be changed: pick an EU region (for example *Italy Northwest (Milan)* or *Germany Central (Frankfurt)*). Always Free compute and block storage exist only in the home region.
-2. Optional but recommended: upgrade the account to **Pay As You Go** and create a **budget alert** (for example 1 €). Always Free resources stay free, and see the idle-reclamation note below.
+2. Recommended: upgrade the account to **Pay As You Go** and create a **budget alert** (for example 1 €). Always Free resources stay free. On the StandPOS demo (2 November 2026) creating the Ampere A1 instance failed with *Out of capacity* while the account was Free Tier and worked after the upgrade; it also avoids idle reclamation (see the last section).
 
 ## 2. Network
 
 1. *Networking → Virtual Cloud Networks → Start VCN Wizard → Create VCN with Internet Connectivity*.
-2. In the public subnet's **security list**, add two ingress rules: source `0.0.0.0/0`, TCP, destination ports **80** and **443**. SSH (22) is already open; restrict its source to your IP if you can.
+2. In the public subnet's **security list**, add two ingress rules: source `0.0.0.0/0`, TCP, destination ports **80** and **443**. SSH (22) is already open; restrict its source to your IP if you can. The security list applies to every instance in the subnet: if other VMs share it, they get the same openings (use a network security group for the StandPOS VM alone if that matters).
 
 ## 3. Virtual machine
 
 1. *Compute → Instances → Create instance*.
 2. Image: **Ubuntu 24.04** (aarch64) or **Oracle Linux 9** (aarch64).
 3. Shape: **VM.Standard.A1.Flex**, 2 OCPU and 12 GB RAM are plenty (Always Free allows up to 4 OCPU and 24 GB in total).
-4. Public subnet of the VCN above, assign a public IPv4 address, add your SSH public key.
+4. Public subnet of the VCN above, assign a public IPv4 address, add your SSH public key. If the console still reports *Out of capacity*, try another availability domain or a smaller shape (1 OCPU, 6 GB). An ephemeral public IP survives reboots but changes if the instance is recreated; reserve one if the address must stay stable.
 5. Boot volume: the default 50 GB is enough (Always Free includes 200 GB of block storage in total).
 
 ## 4. VM firewall
 
 OCI images ship a host firewall that blocks 80/443 even when the security list allows them.
 
-Ubuntu (iptables rules saved by `netfilter-persistent`):
+Ubuntu (iptables rules saved by `netfilter-persistent`). The `ACCEPT` rules must come **before** the `REJECT` rule of the `INPUT` chain. Find its position first:
 
 ```bash
-sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 80 -j ACCEPT
-sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 443 -j ACCEPT
+sudo iptables -L INPUT --line-numbers
+```
+
+On the Ubuntu 24.04 image used for the demo (November 2026) the `REJECT` is rule 5, so insert at 5 (use the number you see):
+
+```bash
+sudo iptables -I INPUT 5 -m state --state NEW -p tcp --dport 80 -j ACCEPT
+sudo iptables -I INPUT 5 -m state --state NEW -p tcp --dport 443 -j ACCEPT
 sudo netfilter-persistent save
 ```
 
@@ -42,6 +48,8 @@ sudo firewall-cmd --reload
 ## 5. DNS
 
 Create an `A` record (for example `demo.standpos.example`) pointing to the VM's public IP. Caddy needs it to obtain a Let's Encrypt certificate, and SumUp needs a public HTTPS host to deliver payment results. Check with `dig +short demo.standpos.example` before going on.
+
+Without a domain of your own, use the wildcard DNS service sslip.io: `STANDPOS_DOMAIN=<ip-with-dashes>.sslip.io` (for example `203-0-113-10.sslip.io` for `203.0.113.10`) resolves to the VM and Caddy obtains a Let's Encrypt certificate for it. The name changes with the IP.
 
 ## 6. Docker
 
@@ -93,11 +101,11 @@ The images are built on the VM for `arm64` (a few minutes the first time). Open 
 Update to a new version:
 
 ```bash
-git pull
+git pull --ff-only
 docker compose -f deploy/docker-compose.yml up -d --build --wait
 ```
 
-Flyway migrates the database on backend start.
+Flyway migrates the database on backend start. Before rebuilding, look at the incoming diff for new migrations and new variables in `deploy/` (add them to `deploy/.env`). Never run `down -v` (it deletes the database volume) and do not run the bootstrap again.
 
 ## 8. Backups to Object Storage
 
