@@ -20,6 +20,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 - `CLAUDE.md`: replies and questions to the user in Italian.
 
+### Fixed
+
+- `docs/deploy-oracle.md`: the iptables `ACCEPT` rules for 80/443 go before the `REJECT` rule (position 5 on the current Ubuntu 24.04 image, not 6), with the command to check it; notes from the November 2026 demo deployment on Free Tier capacity, shared security lists, ephemeral IPs, sslip.io host names and safe updates (`git pull --ff-only`, never `down -v`).
+
 ## [0.2.0] - 2026-10-26
 
 Phase 1 — Register and stock.
